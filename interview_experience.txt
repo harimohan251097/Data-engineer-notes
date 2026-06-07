@@ -1,0 +1,194 @@
+ LTI Mindtree round 1  Apr 23 
+LTI mindtree round 2    11 may
+TCS round 1  5 may
+EPAM round-1 Interview question 18 May
+
+What is S3 Lifecycle policy?
+How would you ensure the data deletion protection?
+How would you handle schema changes in production when CSV files increase from 10 columns to 15 columns? 
+or
+let's say at 7 p.m. for the daily, we are getting the data. We are doing the processing and everything and writing back to the S3 bucket. And CSV files contain 10 columns. So this process continues for 2-3 months. After that, we are getting the data with 15 columns. So now our pipeline has deployed to production. In a prod environment. It's not in the stage or UAT. That we can change everything. So how would you make your pipeline that much distributable that it will not get, you can say, not throw an error while in the production if this kind of situation happens?  answer-schema evaluation
+How is schema evolution done in glue?
+What is DPU In aws ?
+Can you tell me what are the differences between dynamicframe and dataframes and dataset?
+What is ResolveChoice in AWS Glue?
+Could you explain the specific scenarios where choosing EMR would be more appropriate versus opting for AWS Glue?
+What do you mean by serverless?
+We have Athena. Okay, it is used for querying purposes and we have Redshift, which is also used for querying purposes. So what if we go for Athena and when we should go for Redshift?
+What are the limitations of Lambda?
+Why does Lambda show import/package errors?
+ Pyspark coding question -
+Input:
++-------+---------------+
+|employee_id |project |
++-------+---------------+
+|1001 |[p1,p2] 		|
+|1002 |[p1] 		|
+|1003 |[p1,p3,p2] 	|
++-------+---------------+
+Output:
++-------+---------------+
+|project|employee_count |
++-------+---------------+
+|P1 	|3 		|
+|P2	 |2 		|
+|P3 	|1 		|
++-------+---------------+
+
+ explain SparkSession.builder.appName("ProjectCount").getOrCreate()
+  difference between show and collect 
+different types of oom
+Spark architecture in detail
+what are the examples of action
+Do wide transformations create new stages?
+what is dag in spark
+If a particular node has been failed and this task has been done. Who is responsible for creating the task?
+How does Spark recompute failed tasks?
+Can you give me an idea what this Catalyst optimizer is and how it works?
+What kind of operations come under a physical plan and what kind of operations come under a logical plan?
+Can you tell me what column pruning is?
+Can you tell me what is a predicate pushdown?
+What are the joining strategies we are having in Spark?
+Let's say we have two data frames, data frame 1 is of 20 GB, data frame 2 is of 400 GB. Okay, and 20 GB, 400 GB size of data frame. Executer size is 10 GB. Now, in this scenario, what type of joining strategy does Spark use?
+If one side data is 8 MB and the other side is 2 GB with executor size 5 MB, which join strategy will Spark use?
+What are cache and persist?
+What is data skewness?
+What is repartitioning?
+Do you know anything about adaptive query execution? 
+difference in rdd and datasets
+Sql coding question -
+employee ID, name, department, salary, and payment date are the column names. Okay. respective data are there. Okay, I want you to find the previous month's salary for each employee. Okay. Identify the employees whose salary increased compared to their previous record. Got it?
+
+ When can we go for Parquet file format and when can we go for Avro file format?
+Let's say we have a table, okay, and it is required by our client, and it has customer sensitive information, some other information also, okay? How would you hide the customer sensitive information in the table?
+ Do you know the difference between append and extend function in python ?
+ Python coding question :
+you need to write a Python program that asks for the user input two numbers. Okay, the program should attempt to divide the number by the second number. If zero division error occurs, it will throw an error like cannot divide by zero. If no exception occurs, print the result. Okay, if any other, apart from the any other exception occurs, just catch that exception.
+
+
+
+
+
+Amgen round-1 Interview question 22 may
+
+ Find out all customer with average loan amount how have more then 3 active load.
+loan
+cutomer_id
+loan_id
+status_loan
+Amount
+customer
+cust_id
+mail
+Name
+ 
+Reverse a string without using inbuilt function ?
+How to calculate no of partition in pyspark ?
+How to handle data skew in pyspark ?
+Difference between Caching and persist ?
+What is schema evaluation ?
+What are Delta table/delta lake? 
+
+
+
+
+
+
+
+
+TCS round-1 Interview question  28 may 
+
+
+Explain event-driven architecture using S3 and Step Functions.
+ there is a file in S3 and I need to ensure I have to build an event-driven architecture and so my pipeline should get triggered. So pipeline basically means a step function, so which should be triggered as well when the file is placed in S3 and I should avoid triggering the files, it's not triggering the step function whenever the file is having less than 10 MB or it is fully empty. So these two scenarios I need to avoid triggering my file to avoid unnecessary failures in production. So can you explain how will you set up this architecture?
+Can this architecture be implemented without Lambda? - using event bridge with notification with size of file
+How will you secure files stored in S3? - 
+Ensure the files in S3 are secured. I need to make sure the security compliance should be applied for my data sets that I am managing. So what are the things that you will keep in mind while you are working with the files in S3?
+Difference between AWS-managed KMS keys and customer-managed KMS keys.
+How will you provide secure cross-account access from Account B to Account A S3 bucket?
+My consumers are already out of the build and my data is sitting in account A. So I need to ensure that my consumers are able to access account A's data and I am going to provide access only to the required bucket rather than the entire folder or something. So let me do that setup and make sure the access is provisioned correctly. - Cross-Account Architecture
+Write Python/PySpark logic to display first 10 records from a DataFrame.
+What is AWS Glue Crawler?
+How will you configure a Glue Crawler so parent folder becomes database and child folders become tables?
+So file and S3 in a particular folder structure. So in folder A, which is like a main folder, and under that I have folder X, Y, Z. And under that, each of the child folders, I have the files. So I want to make sure this folder A, what I have, I want to create that as a database. The same name should be used and created as a database. And folder X, Y, Z, it should be created as a table name. So how do you ensure your crawler is set up in that way, so that the database and table names are taken up from the S3 location?
+How to do configuration it
+How do you configure Glue Crawler table-level settings? -Advanced Options -> Table Grouping: Enable Create a single schema for each S3 path.
+Why is sorting 1 million records inefficient for fetching one employee?
+What optimization would you use instead of sorting?
+
+
+
+
+
+
+Harmony Data Integration Technology round-1 Interview question 28 May
+
+
+Write a Python function to:
+"sl", "state. "RJ", "amount: 100%, field 41", "record id": "12"
+"scheme_lid"
+"st", "State". "RJ", amount": "200%,
+"st", "State": "RJ", "amount". "100"%
+('ile id. "42, "record id". "3", "scheme_id".
+None, "State": "DL", "amount", "abc"),
+Write a Python function that:
+* Validates required fields.
+* Skips duplicate recordid
+* Skips invalid amount values.
+* Returns total amount by state
+* Works with any iterable, not just a list.
+
+
+Design an API using Flask. Suppose you need to export the processed data, export the processed data through API. So how will you design the API?
+Explain API design.
+Difference between path parameters and query parameters.
+Explain generator functions in Python.- memory we need to read build 100M records read each line one by one but in  loop read entire may crash system	 
+Implementation of generator?
+Sql question:
+table:- scheme_records
+record_id scheme_id state amount status event time ingested_at
+Write a query to retum the latest valid record for each scheme id and state
+
+You also mentioned some interesting query optimization in your resume where you reduced API latency by 30% rate. How exactly you optimized the query? What was the issue? - index, remove heavy join, column purnuing, predicate pushdown
+Build a PySpark ETL job that:
+You receive CSVJSON files in S3. Build a PySpark job that:
+* Reads input data.
+* Validates required fields.
+* Removes duplicate record_id
+* Adds event_date 
+* Writes clean data to S3 in Parquet partitioned by event_date
+
+What work have you done in Apache Airflow?
+Explain DAG development and orchestration in Airflow.
+How do you handle retries, monitoring, and alerts in Airflow?
+
+
+
+
+
+TCS round 1  29 may
+
+ What is Patitonby and bucketingby in pyspark ?
+In between bucketby and partitionby which is having higher Cardinality? - bucketby
+What is salting key in pyspark ?
+What is AQE ?
+Can you tell me the difference between external and managed tables?  table in s3 and Local table 
+ how to calculate the running sum? - SUM(salary) OVER (ORDER BY emp_id) AS running_sum
+
+
+
+
+
+infosys round 1  30 may
+
+Do you have an experience of building a data pipeline end-to-end? Can you talk about it across multiple stages? How would you go about it? 
+in each of these stages that you just spoke about, can you go a little more in depth in each of these stages and describe tool-wise or tech-wise what you have done?
+How many optimal techniques in pyspark?
+Can you describe something very complex that you have worked in SQL?
+When you speak about indexing, what are type of indexing ?
+Do you have exposure to Databricks?
+How much hands-on do you have in cloud technology, say, on orchestration?
+How do you see any disadvantages to aws step  functions? Can you do orchestration in a better manner?
+
+
+

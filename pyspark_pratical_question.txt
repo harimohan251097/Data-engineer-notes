@@ -1,0 +1,723 @@
+ First PySpark Script:
+from pyspark.sql import SparkSession
+
+# Create Spark Session
+spark = SparkSession.builder .appName("Day1_Test") .getOrCreate()
+
+# Create sample data
+data = [("Hari", 27), ("Mohan", 30)]
+columns = ["name", "age"]
+
+df = spark.createDataFrame(data, columns)
+
+# Show data
+df.show() 
+How to read file in pyspark:
+Reading a CSV file
+df_csv = spark.read \
+    .option("header", "true") \ # first row contains column names
+    .option("inferSchema", "true") \ #automatically detect data types     
+    .csv("data/sample.csv")			with help of data present in that 
+column read entire column data
+    Or 
+
+df = spark.read.csv(
+    "people.csv",
+    header=True,
+    schema=schema
+)
+
+spark.read.schema(custom_schema).csv("data.csv")
+
+Reading a JSON file:
+df_json = spark.read.json("data/sample.json")
+
+Reading a Parquet file:
+df_parquet = spark.read.parquet("data/sample.parquet") 
+
+What are Bad / Corrupt Records?
+Records that:
+Don’t match schema
+Have wrong data types
+Malformed JSON/CSV
+Missing columns
+ 
+Using mode("PERMISSIVE"):
+Spark does NOT fail
+👉 Stores bad records in a special column
+df = spark.read \
+.option("header", True) \
+.option("mode", "PERMISSIVE") \
+.option("columnNameOfCorruptRecord", "_corrupt_record") \  # new column created
+.schema(schema) \
+.csv("path/to/file") 
+
+Extract Only Bad Records:
+bad_df = df.filter(df["_corrupt_record"].isNotNull())
+bad_df.show() 
+ 
+Extract Good Records:
+good_df = df.filter(df["_corrupt_record"].isNull()) 
+ 
+Using mode("DROPMALFORMED"):
+Drops bad records, kept only valid 
+df = spark.read \
+    .option("mode", "DROPMALFORMED") \
+    .schema(schema) \
+    .csv("path")
+ 
+Using mode("FAILFAST"):
+Immediately throws an error if any malformed record is found.
+
+
+How to Save Output in a file:
+Parquet file:
+df6.write.mode("overwrite").parquet("output/day7_parquet")
+Csv file: 
+df6.coalesce(1).write.mode("overwrite").csv("output/day7_csv", header=True)  
+Json file:
+df6.write.mode("overwrite").json("output/day7_json") or
+df.write.json("output/path")
+
+#Overwrite_mode replace exist data
+#Append_mode Adds new data
+#ignore_mode If data already exists, Spark does nothing (it doesn't even throw an error).
+#coalesce(1) - create only one file, not recommended for lagre data
+
+
+Pyspark Exploration Functions:
+show():Displays first 20 rows.
+df.show()
+Ex: +----+---+
+|name|age|
++----+---+
+|Hari| 27|
++----+---+
+only showing top 1 row
+
+printSchema():Prints column names + types.
+df.printSchema()
+Ex:-  root
+ |-- name: string (nullable = true)
+ |-- age: long (nullable = true)
+
+
+ describe():Gives summary statistics like count, mean, min, max.
+df.describe().show()
+Ex:-  +-------+-----+------------------+
+|summary| name|               age|
++-------+-----+------------------+
+|  count|    2|                 2|
+|   mean| NULL|              28.5|
+| stddev| NULL|2.1213203435596424|
+|    min| Hari|                27|
+|    max|Mohan|                30|
++-------+-----+------------------+
+
+columns:List of column names.
+print(df.columns)
+Ex:-  ['name', 'age']
+
+count(): to count number of row in dataframe
+print(df.count())
+dtypes:Column names & their data types.
+print(df.dtypes)
+Ex:- [('name', 'string'), ('age', 'bigint')]
+
+SELECT — choose specific columns to show in output
+df.select("name", "age").show()
+
+
+selectExpr(): Write SQL-like expressions inside DataFrame selection:
+selectExpr() in PySpark allows selecting and transforming columns using SQL expressions, making it a concise alternative to select() for complex operations.
+
+	df.selectExpr("name", "age + 5 as age_plus_5").show()
+			Equivalent to 
+df.select(col(“name”),(col(“age”)+5).alias(“age_plus_5”)).show()
+Output:  
++-----+-----------+
+|name |age_plus_5 |
++-----+-----------+
+|Hari |32 |
+|Mohan|35 |
++-----+-----------+
+
+FILTER — filter rows , just like where in mysql
+from pyspark.sql.functions import col  
+df.filter(col("country") == "India").show()
+df.filter("age > 25").show() or df.filter(col("age") > 25).show() 
+df.filter((col("age") > 25) & (col("salary") > 50000)).show() #multiple  and condition 
+df.filter((col("customer_id").cast("int") > 25) | (col("state") == "CA")).show() or condition
+
+ Where : generate same out as of filter , “where” is alias name of “filter” function
+
+withColumn — create or modify a column
+( #first parameter column name And modify value )
+ Add a new column: You can create a new column from existing columns or expressions.
+df = df.withColumn("age_plus_10", col("age") + 10)
+
+ Update/replace an existing column: If the column name already exists, PySpark replaces it.
+df = df.withColumn("age", col("age") * 2)
+
+Type casting (changing datatype):
+from pyspark.sql.functions import col
+df = df.withColumn("age", col("age").cast("string")) 
+here #first parameter column name
+Second parameter of type object 
+
+ Apply functions (upper, lower,trim, substring, math, etc.):
+from pyspark.sql.functions import upper
+df = df.withColumn("name_upper", upper(col("name")))
+
+
+ Conditional logic: just like case when  in my sql( if -else)
+from pyspark.sql.functions import when
+
+df = df.withColumn("category", 
+                   when(col("age") > 25, "Adult").otherwise("Young"))
+  
+Remove Special Characters:  Removes numbers & symbols
+
+from pyspark.sql.functions import regexp_replace
+df.withColumn(
+"name",
+regexp_replace(col("name"), "[^a-zA-Z]", "")
+).show() 
+
+withColumnRenamed — rename a column (exist name , new name)
+df.withColumnRenamed("salary", "monthly_salary").show()
+
+alias — temp name for a column, Used in select or expressions.
+df.select(col("salary").alias("income")).show() 
+# it will show output name as provided
+Used in select(), agg(), groupBy()
+
+
+ cast — change data type for output only 
+df.withColumn("salary_str", col("salary").cast("string")).show()
+
+Valid data type for casting in schema 
+"string", "int", "double", "float", "timestamp", "date"
+
+
+drop — remove columns  from dataframe for that show() function
+df.drop("country").show() 
+Or  df.drop("age", "salary").show() #multiple 
+
+dropDuplicates(): Removes duplicate rows.
+data = [("Hari", 27), ("Hari", 27)]
+df = spark.createDataFrame(data, ["name", "age"])
+df.dropDuplicates().show() 
+
+Only show single row -   Hari|27
+
+Remove duplicates based on column:
+	df.dropDuplicates(["name"]).show()  #only show first occurrence of non duplicate  
+      value for that column remove all other row
+
+distinct — only show distinct value 
+df.select("country").distinct().show()
+
+orderBy — sorting 
+df.orderBy("age").show() #Ascending by default
+df.orderBy(col("salary").desc()).show() #descending
+ 
+dropna() — Remove rows containing NULL
+Remove rows where ANY column has null:
+df_clean = df.dropna()
+
+Remove rows only if ALL columns are null
+df_clean = df.dropna(how="all")
+ 
+Remove rows if any column in subset  has null
+df_clean = df.dropna(subset=["name", "age"])
+  
+ fillna() — Replace NULL with a value
+Replace null age with 0
+df = df.fillna({"age": 0})
+
+ Replace multiple fields
+df = df.fillna({"name": “unknown”, "salary": 10000})
+
+df.replace()  functions: replace exist value in every tuple
+Replace a value:
+df = df.replace("Male", "M") 
+
+Replace multiple value:
+df= df.replace(["Male", "Female"], ["M", "F"])
+
+ Checking NULL:
+Show all row where a column is null:
+df.filter(col("age").isNull()).show()
+
+Show all row where a column is not null:
+df.filter(col("age").isNotNull()).show()
+ 
+
+Count NULL values in each column
+
+from pyspark.sql.functions import sum, col, when
+
+df.select([
+sum(
+when(col(c).isNull(), 1).otherwise(0)
+).alias(c + "_nulls")
+for c in df.columns
+]).show()
+
+
+CONDITIONAL LOGIC (when clause ):
+
+Basic condition: decide adult or young 
+from pyspark.sql.functions import when, col
+
+df = df.withColumn(
+    "category",
+    when(col("age") > 25, "Adult").otherwise("Young")
+)
+
+ Multiple conditions: grade base on marks
+ df = df.withColumn(
+    "grade",
+    when(col("marks") >= 90, "A")
+    .when(col("marks") >= 75, "B")
+    .when(col("marks") >= 60, "C")
+    .otherwise("Fail")
+)
+
+ Use expressions inside when(): salary flag on above 50000
+df = df.withColumn(
+    "salary_flag",
+    when(col("salary") >= 50000, 1).otherwise(0)
+)
+
+ when + isNull(): name or unknown value 
+df = df.withColumn(
+    "name_clean",
+    when(col("name").isNull(), "Unknown").otherwise(col("name"))
+)
+
+ Combine multiple conditions:
+df = df.withColumn(
+    "status",
+    when((col("age") > 18) & (col("salary") > 30000), "Valid")
+    .otherwise("Invalid")
+)
+ Or
+df = df.withColumn(
+    "status",
+    when((col("age") > 18) | (col("salary") > 30000), "Valid")
+    .otherwise("Invalid")
+)
+Joins in PySpark:
+A join combines rows from two DataFrames using a common key.
+df1.join(df2, join_condition, join_type)
+ 
+ Example: 
+from pyspark.sql import SparkSession
+spark = SparkSession.builder.getOrCreate()
+
+data1 = [
+   (1, "Hari"),
+   (2, "Mohan"),
+   (3, "Ravi")
+]
+
+data2 = [
+   (1, "Delhi"),
+   (2, "Mumbai"),
+   (4, "Pune")
+]
+
+df1 = spark.createDataFrame(data1, ["id", "name"])
+df2 = spark.createDataFrame(data2, ["id", "city"]) 
+
+
+Inner Join : Returns only matching rows from both sides
+df1.join(df2, on="id", how="inner").show()
++---+-----+------+
+|id |name |city |
++---+-----+------+
+|1 |Hari |Delhi |
+|2 |Mohan|Mumbai|
++---+-----+------+
+  
+ Left Join : All rows from LEFT + matching from RIGHT
+df1.join(df2, on="id", how="left").show()
++---+-----+------+
+|id |name |city |
++---+-----+------+
+|1 |Hari |Delhi |
+|2 |Mohan|Mumbai|
+|3 |Ravi |null |
++---+-----+------+ 
+
+Right Join : All rows from RIGHT + matching from LEFT
+df1.join(df2, "id", "right").show()
+
+
+Full Outer Join: All rows from both sides
+df1.join(df2, "id", "full").show() 
++---+-----+------+
+|id |name |city |
++---+-----+------+
+|1 |Hari |Delhi |
+|2 |Mohan|Mumbai|
+|3 |Ravi |null |
+|4 |null |Pune |
++---+-----+------+
+
+Left Semi Join:  Filters LEFT table (no columns from right)
+df1.join(df2, "id", "left_semi").show()
++---+-----+
+|id |name |
++---+-----+
+|1 |Hari |
+|2 |Mohan|
++---+-----+
+ 
+Left Anti Join : Rows from LEFT with NO match in RIGHT
+df1.join(df2, "id", "left_anti").show()
++---+----+
+|id |name|
++---+----+
+|3 |Ravi|
++---+----+
+
+Cross Join : join each recording of one table with every record of another table
+df1.crossJoin(df2).show() 
+
+Join on Multiple Columns:
+df1.join( df2, (df1.id == df2.id) & (df1.dept == df2.dept), "inner" )
+
+Join Using Aliases: using alisa name instead of dataframe
+df1.alias("e").join( df2.alias("s"), col("e.id") == col("s.id"), "inner")
+
+
+GroupBy & Aggregations:
+data = [
+    ("Delhi", "Laptop", 2, 70000),
+    ("Delhi", "Mobile", 5, 20000),
+    ("Mumbai", "Laptop", 1, 70000),
+    ("Mumbai", "Mobile", 3, 20000),
+    ("Delhi", "Laptop", 1, 70000)
+]
+
+columns = ["city", "product", "quantity", "price"]
+df = spark.createDataFrame(data, columns)
+df.show()
+ 
+Sum():
+df.groupBy("city").sum("quantity").show()
+
+Average():
+df.groupBy("city").avg("amount").show()
+ 
+Max / Min:
+df.groupBy("city").max("amount").show()
+df.groupBy("city").min("amount").show()
+
+Multiple Aggregations using agg()
+df.groupBy("city").agg(
+    sum("quantity").alias("total_qty"),
+    avg("price").alias("avg_price"),
+    max("quantity").alias("max_qty")
+).show()
+ 	
+ GroupBy Multiple Columns:
+df.groupBy("city", "product").sum("quantity").show()
+
+ Count()
+df.groupBy("city").count().show()
+
+  HAVING Clause Equivalent
+from pyspark.sql.functions import sum
+df.groupBy("city") .agg(sum("quantity").alias("total_qty")) .filter("total_qty > 5") .show()
+
+ Aggregation on Derived Column
+from pyspark.sql.functions import col
+df.withColumn("revenue", col("quantity") * col("price")) \
+ .groupBy("city") \
+.sum("revenue") \
+.show()
+
+collect_list vs collect_set: will get a list of element
+Collection_list: get list of all element including duplicate
+Collect_set : get all distinct element list
+
+from pyspark.sql.functions import collect_list, collect_set
+df.groupBy("city").agg(
+    collect_list("product").alias("products_list"),
+    collect_set("product").alias("products_set")
+).show(truncate=False)
+ 
+countDistinct
+To get all distinct count of element
+
+ from pyspark.sql.functions import countDistinct
+df.groupBy("city").agg(countDistinct("product").alias("unique_products")
+).show()
+
+
+ Window function 
+row_number(): get all row rank according to partition by column and order by column
+data = [
+("Delhi", "Hari", 50000),
+("Delhi", "Mohan", 60000),
+("Delhi", "Ravi", 55000),
+("Mumbai", "Sita", 70000),
+("Mumbai", "Amit", 65000)
+]
+
+cols = ["city", "name", "salary"]
+df = spark.createDataFrame(data, cols)
+df.show()
+
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number
+window_spec = Window.partitionBy("city").orderBy("salary")
+df.withColumn(
+   "row_num",
+   row_number().over(window_spec)
+).orderBy("name").show()
+ 
+rank() : get same number  same rank and skip n-1 number 
+from pyspark.sql.functions import rank
+window_spec = Window.orderBy("salary")
+df.withColumn("rank",rank().over(window_spec)).show()
+
+ dense_rank() : dont skip any number in rank
+from pyspark.sql.functions import dense_rank
+df.withColumn( "dense_rank",dense_rank().over(window_spec)).show()
+
+ Top Earner per City:
+from pyspark.sql.functions import desc
+top_salary = Window.partitionBy("city").orderBy(desc("salary"))
+df.withColumn("rn", row_number().over(top_salary)).filter("rn = 1").show()
+ 
+
+  Running Total (Cumulative Sum) :
+from pyspark.sql.functions import sum
+running_window = Window.partitionBy("city") .orderBy("salary") \
+                       .rowsBetween(Window.unboundedPreceding, Window.currentRow)
+
+df.withColumn("running_total",sum("salary").over(running_window)).show()
+ 
+rowsBetween(Window.unboundedPreceding, Window.currentRow):
+It will help to get cumulative sum based on partition and upto particular value.
+
++-------+-----+------+--------------+
+| city  	    |name   |salary  |running_total |
++-------+-----+------+--------------+
+| Delhi     |Hari     |50000 | 50000        |
+| Delhi     |Ravi    |55000  | 105000       |
+| Delhi     |Mohan|60000  | 165000       |
+|Mumbai |Amit     |65000 | 65000        |
+|Mumbai |Sita      |70000 | 135000       |
++-------+-----+------+--------------+
+
+LAG(): Previous Row Value
+data = [
+(1, "Hari", "2024-01-01", 50000),
+(1, "Hari", "2024-06-01", 55000),
+(1, "Hari", "2024-12-01", 60000),
+(2, "Mohan", "2024-02-01", 45000),
+(2, "Mohan", "2024-09-01", 48000)
+]
+
+cols = ["emp_id", "name", "date", "salary"]
+df = spark.createDataFrame(data, cols)
+df.show()
+from pyspark.sql.window import Window
+from pyspark.sql.functions import lag
+window = Window.partitionBy("emp_id").orderBy("date")
+df.withColumn("prev_salary", lag("salary").over(window)).show()
+
+Example:
+amount | prev_amount
+100 | null
+150 | 100
+200 | 150
+ 
+ LEAD() – Next Row Value
+ from pyspark.sql.functions import lead
+df.withColumn("next_salary", lead("salary").over(window)).show()
+
+
+Latest Record per Employee:
+from pyspark.sql.functions import row_number
+latest = Window.partitionBy("emp_id").orderBy(col("date").desc())
+df.withColumn("rn", row_number().over(latest)).filter("rn = 1").drop("rn").show()
+ 
+ Moving Average (Last 2 Records): take average of every 2 record (current,pervious)
+from pyspark.sql.functions import avg
+moving_window = Window.partitionBy("emp_id").orderBy("date").rowsBetween(-1, 0)
+df.withColumn( "moving_avg_salary",avg("salary").over(moving_window)).show()
+
+Output :
++------+-----+----------+------+-------------------+
+|emp_id|name |date          |salary|moving_avg_salary  |
++------+-----+----------+------+-------------------+
+|1     |Hari 	|2024-01-01|50000 |50000              |
+|1     |Hari 	|2024-06-01|55000 |52500              |
+|1     |Hari 	|2024-12-01|60000 |57500              |
+|2     |Mohan	|2024-02-01|45000 |45000              |
+|2     |Mohan	|2024-09-01|48000 |46500              |
++------+-----+----------+------+-------------------+
+
+ 
+rowsBetween(-1, 0) :- will only select 2 record (current,pervious) 
+ 
+MERGE in PySpark:
+MERGE is mainly used with Delta tables for handling incremental data updates
+MERGE is used to update, insert, or delete data in a table based on a condition
+ 
+Existing table (target)
+id | name | salary
+1  | Hari | 5000
+2  | Mohan| 6000 
+New data (source):
+id | name | salary
+2  | Mohan| 7000   ← updated
+3  | Ravi | 4000   ← new 
+ 
+Without MERGE:
+Update existing rows
+Insert new rows
+Very complex 
+ 
+With MERGE:
+deltaTable.alias("t").merge(
+    source_df.alias("s"),
+    "t.id = s.id"
+).whenMatchedUpdate(set={
+    "salary": "s.salary"
+}).whenNotMatchedInsertAll().execute() 
+  
+ 
+How to extract day, moth and year from date:
+ 
+	from pyspark.sql.functions import year, month, dayofmonth, col
+df.select(
+year("ts").alias("year"),
+month("ts").alias("month"),
+dayofmonth("ts").alias("day")
+).show()
+
+Output:
+year | month | day
+2024 | 4 | 18
+
+Or
+from pyspark.sql.functions import date_format
+df.select(
+date_format("ts", "yyyy").alias("year"),
+date_format("ts", "MM").alias("month"),
+date_format("ts", "dd").alias("day")
+).show()
+
+Output:
+2024" | "04" | "18"
+
+"MMM" → Apr
+"MMMM" → April
+"yyyy-MM" → 2024-04
+
+For week name:
+	df.withColumn("day_name", date_format("date", "EEEE")).show()
+	"E" → Thu
+"EEEE" → Thursday
+Direct get value in string
+
+OR 
+
+df.withColumn("day_of_week", dayofweek("date")).show()
+Get numeric value 1(sunday) to 7(saturday)
+Need to mapp with string 
+
+Find difference between date:
+withColumn("datediff",datediff("created_at","next date") 
+
+
+ 
+ Get date from timestamp:
+df.withColumn("date", col("timestamp").cast("date")).show()
+
+Difference between 2 timestamp in second:
+df.withColumn(
+"diff_seconds",
+col("end_ts").cast("long") - col("start_ts").cast("long")
+).show() 
+ 
+How to implement offset concept of sql in pyspark:
+
+ Using row_number()
+from pyspark.sql.window import Window
+from pyspark.sql.functions import row_number
+
+window = Window.orderBy("id")
+
+df_with_row = df.withColumn("row_num", row_number().over(window))
+
+df_with_row.filter("row_num > 5 AND row_num <= 15").show() 
+
+ To get the last month of recordings in PySpark using a window function 
+# 1. Convert timestamp to Unix seconds (Long) 
+df = df.withColumn("unix_time", F.col("timestamp_col").cast("long")) 
+
+# 2. Define 30 days in seconds seconds_in_month = 30 * 24 * 60 * 60 
+
+# 3. Create window: look back 30 days from the current row's timestamp window_spec = Window.partitionBy("user_id").orderBy("unix_time") .rangeBetween(-seconds_in_month, Window.currentRow) 
+
+# 4. Use window to aggregate or identify records # Example: Count recordings in the last month for each row 
+df_result = df.withColumn("recordings_last_month", F.count("record_id").over(window_spec))  
+
+ 
+ How to split a categories into multiple using a pattern   -   explode
+business_id				categories			cat
+G5ERFWvPfHy7IDAUYlWL2A	Detailing;Automotive	Detailing
+G5ERFWvPfHy7IDAUYlWL2A	Detailing;Automotive	Automotive
+ 
+df=yelp_business.withColumn("cat",explode(split(col("categories"),";")))
+
+In categories we have 2 categories which spilt into 2 record
+
+ How to collect any scalar value in any variable:
+max_value= df.select(max(col(“salary”))).collect()[0][0]
+
+Union and unionByName:
+Neither union() nor unionByName() removes duplicates.
+Union:
+Both DataFrames must have the same number of columns and compatible data types.
+It combine using position of column
+df1.union(df2)
+ 
+  unionByName:
+Matches columns by name rather than position.
+df1.unionByName(df2)
+
+ 
+unionByName() with missing columns
+df1.unionByName(df2, allowMissingColumns=True)
+Spark fills missing columns with NULL 
+Example :
+Df1
+(id, name)
+Df2
+(id, name, salary)
+For all record of d1.salary will be null after merge
+ 
+For mysql level union:
+SQL UNION = Union + Distinct
+SQL UNION ALL = PySpark union()
+
+ 
+ 
+ 
+ 
+  
+ 
+ 
+ 
+
+

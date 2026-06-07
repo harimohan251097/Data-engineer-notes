@@ -1,0 +1,1873 @@
+1. What is PySpark?
+PySpark is the Python API for Apache Spark.which is a powerful framework used for big data processing and distributed computing.
+Instead of processing data on a single computer, PySpark distributes the work across a cluster (many computers working together).
+Works on Driver + Executors architecture
+Code → DAG → Tasks → Executed in parallel on cluster
+Why PySpark is used? 
+Handling big data (GBs to TBs+)
+Running computations in parallel
+Being faster for large-scale processing
+Supporting batch processing + real-time streaming
+
+2. Spark Architecture
+Spark follows a Master–Worker architecture designed for distributed data processing.
+
+High-Level Components:
+Driver (Master Node) (brain):
+Creates SparkSession
+Request resource to cluster manager
+Builds execution plan (DAG)
+Generate logic or physical plan which decide no of job, stage and task
+Sends tasks to executors
+Collects results
+
+Cluster Manager (resource allocator):
+Manages resources (CPU, memory)
+Allocates resources to Spark applications
+Decide how many executors to launch 
+Examples: Yarn (in hadoop)
+ 
+Worker Nodes(worker):
+Machines where actual computation happens
+Machines on cluster that run executor 
+On heap memory(executor) and off heap memory(to keep garbage)
+ 
+Executors(worker doing job):
+Transformation and action perform on actual data
+Execute task as per physical plan 
+Responsibilities:
+Execute tasks
+Store data in memory/cache
+Return results to Driver
+ 
+Job, stage and task:
+Job created based on actions
+Stages created based on shuffles or wide transformation
+Task created based on partition 
+ 
+ How Spark Job Executes (Step-by-Step):
+Step 1: User Writes Code
+df.filter(df.age > 25).groupBy("city").count().show()
+
+Step 2: Driver Creates DAG:
+Spark creates a DAG (Directed Acyclic Graph) of transformations
+Optimizes execution plan
+
+Step 3: DAG → Stages
+DAG is split into stages
+Each stage contains multiple tasks
+
+Step 4: Tasks Creation
+Each stage is divided into tasks
+Each task works on one data partition
+
+Step 5: Task Execution
+Driver sends tasks to executors
+Executors process data in parallel
+
+Step 6: Result Returned:
+Executors send results back to Driver
+Driver displays output
+ 
+Execution Example:
+df.filter(df.age > 25).groupBy("city").count().show() 
+Execution Flow:
+filter() → Transformation
+groupBy() → Transformation (causes shuffle)
+count() → Transformation
+show() → Action (triggers job)
+Create DAG
+Split into stages:
+Stage 1 → filter
+Stage 2 → groupBy (shuffle)
+Create tasks per partition
+Execute in parallel
+Visual Flow:
+User Code
+  ↓
+Driver Program
+  ↓
+DAG Creation
+  ↓
+Stages → Tasks
+  ↓
+Cluster Manager
+  ↓
+Executors (Worker Nodes)
+  ↓
+Result → Driver
+ 
+
+
+
+3. Optimization Techniques
+Use DataFrame instead of RDD
+Predicate pushdown or Filter early, Select only required columns
+Partitioning & bucketing
+Broadcast joins
+Cache/persist wisely
+Avoid wide transformations when possible
+Avoid collect()
+Executes the Spark job
+Brings ALL data from executors to the Driver
+Returns data as a Python list
+
+Use limit()
+Control partitions 
+
+
+
+4. Difference: RDD vs DataFrame vs Dataset
+
+Feature
+RDD ❌
+DataFrame ✅
+Dataset ⚡
+Level data structure
+Low
+High
+High
+Schema 
+❌ No
+✅ Yes
+✅ Yes
+Performance
+Slow
+Fast
+Fast
+Optimization
+❌ No
+✅ Yes catlyst
+✅ Yes
+Type Safety 
+yes
+❌ No
+✅ Yes
+API
+Functional
+SQL + API
+Typed API
+Use in PySpark
+Limited
+Most used
+no
+
+
+RDD (Resilient Distributed Dataset)
+Scheme means structure data or not 
+Type safety means: Type safety means errors are detected at compile time instead of runtime. 
+Dataset is not widely used because DataFrame already provides good performance with less complexity, and Dataset is not supported in PySpark.
+Dataset is called a mix of RDD and DataFrame because it combines RDD’s type safety and functional programming with DataFrame’s optimization and structured data processing.
+
+
+5. How does Spark handle fault tolerance
+Fault Tolerance
+
+
+Fault tolerance means the system can recover from failures without losing data or stopping the job.
+Spark uses lineage graph (DAG):
+If data lost → recompute using transformations
+No need to store intermediate data
+Example:
+rdd1 = sc.textFile("data.txt")
+rdd2 = rdd1.filter(lambda x: "error" in x)
+rdd3 = rdd2.map(lambda x: x.upper()) 
+Suppose rdd3 partition is lost
+Spark will:
+Go back to lineage
+Recompute only that partition, NOT the whole dataset
+Failure Scenarios
+Executor Failure
+Tasks are reassigned to another executor
+Data Loss
+Recomputed using lineage
+Node Crash
+Job continues on other nodes
+ 
+Data flow :
+Data Lost
+↓
+Check Lineage (DAG)
+↓
+Recompute Only Missing Partition
+↓
+Continue Execution 
+
+
+6. Exception Handling
+In PySpark, exception handling is done using try-except in the driver, while executor-level errors must be handled inside transformations like map or filter.
+Exception Handling in Driver(try and except block):
+Try:
+df = spark.read.csv("wrong_path.csv")
+df.show()
+except Exception as e:
+print("Error:", e) 
+Handles errors like:
+File not found
+Syntax errors
+Connection issues
+
+Exception Handling in Executors(can’t handle using try except block):
+Handle inside transformation:
+def safe_div(x):
+Try:
+return 10 / x
+Except:
+return None
+rdd.map(safe_div).collect() 
+Filter bad data before operation:
+rdd.filter(lambda x: x != 0).map(lambda x: 10 / x).collect() 
+Logging Errors:
+import logging
+logging.error("Something went wrong") 
+Real-Life Analogy:
+Driver = Manager
+Executors = Workers
+Manager can catch his own mistakes
+But worker mistakes must be handled at worker level
+
+7. Narrow vs Wide Transformations
+Narrow → No shuffle (map, filter)
+Wide → Shuffle required (groupBy, join)
+Narrow Transformations:
+A transformation is narrow: when Each output partition depends on only one input partition
+Key Point:
+No data movement between partitions
+No shuffle
+Fast
+Examples:
+map()
+filter()
+select()
+withColumn()
+
+Wide Transformations:
+A transformation is wide when: Output partition depends on multiple input partitions
+Key Point:
+Data moves across partitions
+Shuffle happens
+Slower
+Examples:
+groupBy()
+reduceByKey()
+join()
+distinct()
+
+8. How does PySpark handle schema inference 
+Schema Inference
+PySpark handles schema inference by scanning data, detecting column data types, resolving conflicts, and assigning a schema automatically, but it may impact performance and accuracy.
+
+
+Automatically detects schema when reading data
+But:
+ 👉 Slower
+ 👉 Better to define schema explicitly
+
+9. Parquet File Format
+Parquet is a columnar storage file format used in big data processing.
+Stores data column-wise (not row-wise), 
+Reads only required columns 
+so its fast
+it is optimized for performance and storage efficiency.
+Parquet uses built-in compression:Snappy (default) , 
+so small file size
+ less input output operation
+Schema is stored inside the file -  
+No need to define schema manually
+No need for inferSchema
+Better for Big Data Analytics:
+Works efficiently with:
+Aggregations
+Joins
+Filters
+Predicate Pushdown Support:
+Filters are applied at storage level
+Only relevant data is read
+Faster queries
+Column Pruning:
+Only required columns are read
+Improves performance significantly
+When to Use Parquet:
+Working with large datasets
+Need fast queries
+Doing analytics
+
+
+
+10. How do you handle 10GB file in Spark
+To handle a 10GB file in Spark, we use distributed processing, proper partitioning, efficient formats like Parquet, and optimizations like predicate pushdown and column pruning while avoiding operations like collect().
+
+Use Distributed Storage like s3
+Avoid local single-node file if possible
+ Use Efficient File Format: Parquet
+ Proper Partitioning
+Spark splits file into partitions automatically
+ Use Column Pruning:
+ Reads only required columns
+Use Predicate Pushdown:
+ Reads only required rows
+Avoid collect():
+Brings full data to driver → memory crash
+Use show() or limit():
+Safe way to view data
+Cache Carefully
+Use only if:Reusing data multiple times
+Don’t cache large data unnecessarily
+Handle Skew:
+if one key has huge data:
+Use salting technique
+Repartition properly
+
+
+
+11. Types of Joins
+Inner
+Left 
+Right
+Full
+Left_semi
+left_snti
+Cross
+
+
+12. What is meant by Data Skewness? How to deal with this?
+Data Skewness
+Data Skew occurs when data for certain keys is unevenly distributed, causing some Spark tasks to run much longer than others. It leads to poor parallelism and slow jobs. Common solutions include broadcast joins, salting heavy keys, and repartitioning using high-cardinality columns. 
+Solutions:
+Salting
+Broadcast small table
+Repartition by better column
+
+13. OOM (Out Of Memory)
+Causes:
+Large shuffle
+collect()
+Fix:
+Increase memory
+Use repartition
+Avoid wide operations  
+
+Driver Out Of Memory: (Driver node memory gets exhausted)
+Common Causes
+Using collect() on huge data
+Large broadcast variables
+Too much metadata/logging
+Very large result set returned to driver
+Solution
+Avoid collect() on large data
+Use show() or limit()
+Increase driver memory
+Write output to storage instead
+ 
+Executor Out Of Memory: (Executor memory becomes insufficient during task execution.)
+Common Causes
+Large shuffle operations
+Data skew
+Huge joins/groupBy
+Large partitions
+Caching excessive data
+Solution
+Repartition data properly
+Increase executor memory
+Optimize joins
+Use broadcast joins
+Reduce shuffle
+   
+Shuffle OOM: (OOM during shuffle stage)
+ Usually occurs in:
+joins
+groupBy
+orderBy
+Distinct
+Causes
+Large shuffle partitions
+Data skew
+Insufficient memory
+Solution
+Tune shuffle partitions
+Use salting for skew
+Optimize joins
+Increase memory
+
+Cache/Persist OOM: (Cached DataFrames consume excessive memory)
+ Causes
+Caching huge datasets unnecessarily
+Multiple cached DataFrames
+Solution
+Use unpersist()
+Cache only reused datasets
+Use MEMORY_AND_DISK strategy
+
+14. Actions in Spark
+count()
+collect()
+show()
+take()
+write()
+
+15. How to read CSV file without using an external schema
+Read CSV without schema
+spark.read.csv("file.csv", header=True, inferSchema=True)
+
+16. Deploy PySpark Application
+Use spark-submit
+Run on YARN / Kubernetes
+Package dependencies (zip/egg)
+
+17.What is Predicate Pushdown and how does it work in PySpark? 
+Predicate Pushdown
+Filters are applied at data source level, reducing data read.
+
+18. Data Deduplication
+df.dropDuplicates()
+
+19. Monitoring & Logging
+Spark UI
+Logs (log4j)
+Metrics tools (Prometheus, Grafana)
+
+20. Resource Management
+Configure executors, cores, memory
+Use dynamic allocation
+Fair scheduler
+
+21. How do you manage and handle null values in PySpark DF 
+Handle Null Values
+dropna() — Remove rows containing NULL
+Remove rows where ANY column has null:
+df_clean = df.dropna()
+
+Remove rows only if ALL columns are null
+df_clean = df.dropna(how="all")
+ 
+Remove rows if any column in subset  has null
+df_clean = df.dropna(subset=["name", "age"])
+  
+ fillna() — Replace NULL with a value
+Replace null age with 0
+df = df.fillna({"age": 0})
+
+ Replace multiple fields
+df = df.fillna({"name": “unknown”, "salary": 10000})
+
+
+22. What is lazy evaluation? How it executed the job 
+Lazy Evaluation
+Lazy Evaluation:
+Spark does NOT run immediately when you write code like:
+df1 = df.filter(df.age > 25)
+df2 = df1.select("name")
+df3=df2.withcolumn(“capital_name”, upper(col(“name”)))
+Nothing runs yet ❌
+
+
+Spark waits until it hits an ACTION (like show(), count(), collect())
+Then Spark runs all previous steps in one optimized way.
+
+ Why lazy evaluation?
+Better performance
+Optimizes the plan (Catalyst optimizer)
+Avoids unnecessary computations
+
+
+
+23. Difference cache() vs persist()
+Cache / Persist:
+cache() is a shorthand for persist() with default MEMORY_ONLY storage level, while persist() allows specifying different storage levels.
+
+ df_filtered = df.filter(df.age > 25)
+
+df_filtered.count()
+df_filtered.show() 
+
+Here filter run twice because result of df_filter is not stored
+Solution:
+df_filtered.cache() or df.persist(StorageLevel.MEMORY_AND_DISK)
+ 
+Stored in memory
+ Faster reuse
+ 
+Cache:
+Default store in memory(Ram)
+When to use cache:
+Data fits in memory
+ 
+persist():
+You can control how data is stored
+Storage Level		Meaning
+MEMORY_ONLY		Store in RAM
+MEMORY_AND_DISK	RAM + Disk (if memory full)
+DISK_ONLY			Only disk
+MEMORY_ONLY_SER	Serialized (less memory) but need to  
+deserlised every time we need that datafram
+
+Use persist() when:
+Data is large
+Memory may not be enough
+You want control where to save data
+
+
+24. Significance of broadcast in Spark 
+Broadcast in Spark
+Broadcast Join :
+Broadcast join avoids shuffle by sending small data to all executors.
+
+large_df → 10 GB data
+small_df → 5 MB data
+large_df.join(small_df, "id")
+
+What spark does
+Splits both datasets into partitions
+Moves data across network
+Matches keys 
+
+ Problems:
+Network I/O
+Disk I/O
+Very slow
+ 
+ What happen in broadcast join:
+ small_df → copied to all executors
+
+Executor 1: large_df_part + small_df
+Executor 2: large_df_part + small_df
+Executor 3: large_df_part + small_df
+
+Each executor joins locally
+No shuffle
+Much faster
+
+ When to Use Broadcast Join?
+One table is very small
+Other table is very large
+Join key is present
+When one dataset is small enough to fit in memory.
+
+What is default threshold?
+10MB for smaller file
+
+25. Difference Repartition vs Coalesce
+To control parallelism, performance, and number of output files.
+Spark works on partitions. If partitions are not managed properly:
+jobs become slow
+resources are wasted
+too many small files are created
+More partitions → more parallelism
+Fewer partitions → less overhead
+
+repartition(n)
+Increases or decreases number of partitions
+Causes a full shuffle
+Expensive
+Used when you want balanced partitions
+example: 
+df = df.repartition(10)
+ 
+When to use it :
+Before large joins (Joins & groupBy need balanced data.)
+Before writing large files
+When existing partitions are unbalanced(Some partitions huge, some small → slow job. Repartition redistributes data evenly.)
+Example:
+Before:
+Partition 1 → 100 rows 
+Partition 2 → 5 rows 
+Partition 3 → 200 rows 
+After repartition(2):
+Partition 1 → ~150 rows 
+Partition 2 → ~155 rows 
+
+Balanced,Expensive (shuffle)
+
+
+coalesce(n)
+Only reduces number of partitions
+NO shuffle (faster)
+Data is moved minimally
+Example :
+df = df.coalesce(2) 
+When to use :
+After filtering data(Data shrinks but partitions remain same → waste resources.  Fewer tasks, Better resource usage)
+Before writing a small output
+When you want fewer output files
+By default: df.write.parquet("output/")
+Creates many small files.
+df.coalesce(1).write.parquet("output/")- Single output file
+Example:
+Before:
+Partition 1 → 100 rows 
+Partition 2 → 5 rows 
+Partition 3 → 200 rows 
+After coalesce(2):
+Partition 1 → 100 rows 
+Partition 2 → 205 rows   ❌ (imbalanced)
+Fast,Uneven data distribution
+ 
+
+We use repartition and coalesce to control the number of partitions in Spark, which helps improve parallelism, balance workload, reduce small files, and optimize performance. Repartition performs a full shuffle and is used when increasing or balancing partitions, while coalesce reduces partitions without shuffle and is used after filtering or before writing output. 
+26. What are the different storage level in Spark 
+Storage Levels
+You can control how data is stored
+Storage Level		Meaning
+MEMORY_ONLY		Store in RAM
+MEMORY_AND_DISK	RAM + Disk (if memory full)
+DISK_ONLY			Only disk
+MEMORY_ONLY_SER	Serialized (less memory)
+
+
+
+27. What is AQE in Spark? 
+AQE (Adaptive Query Execution)
+Dynamic optimization during runtime:
+AQE (Adaptive Query Execution) allows Spark to dynamically optimize execution plans at runtime based on actual data, improving performance through features like dynamic join selection, partition coalescing, and skew handling.
+Why AQE is Needed?
+Normally:
+Spark creates a plan before execution
+But actual data may be different from estimates
+This can lead to:
+Poor join selection
+Data skew
+Too many/too few partitions
+ 
+Key Features of AQE:
+ Dynamic Join Optimization
+Spark can change join type at runtime
+Example:
+Initially → Sort Merge Join
+After seeing small data → Broadcast Join
+Improves performance
+
+Coalesce Shuffle Partitions:
+Reduces number of partitions dynamically
+Before:
+200 partition
+After:
+50 partition
+Avoids small tasks
+Improves efficiency
+ 
+Skew Join Handling:
+Handles data skew automatically
+Detects large partitions
+Splits them into smaller ones
+Prevents slow tasks
+ 
+How to activate AQE
+spark.conf.set("spark.sql.adaptive.enabled", "true")
+ 
+With AQE:
+Dynamic optimization
+Better performance
+Handles real data patterns
+ 
+Real-Life Analogy:
+Without AQE → fixed route (even if traffic) 
+With AQE → change route based on traffic
+
+
+28.  hat is UDF? How do you create and register a UDF
+UDF (User Defined Function)
+What is User Defined Function?
+Used when Spark doesn’t have a built-in function we required Complex custom logic.
+Example:
+Create a udf
+
+from pyspark.sql.functions import udf
+from pyspark.sql.types import StringType
+
+def category_func(age):
+    return "Senior" if age > 28 else "Junior"
+
+udf_func = udf(category_func, StringType())
+df.withColumn("category", udf_func("age")).show()
+
+Register a udf:
+spark.udf.register("my_udf_sql", category_func, StringType()) 
+
+Use a udf:
+df.createOrReplaceTempView("people")
+spark.sql("SELECT my_udf_sql(name) FROM people").show()
+ 
+
+
+Why UDF is Slow?
+UDFs are slow because they involve serialization between JVM and Python and bypass Spark’s Catalyst optimizer.
+
+Spark runs in JVM
+Python runs separately
+Data moves between JVM ↔ Python (serialization)
+Result -Slow performance, Breaks Spark optimization
+
+
+29. Difference  b/w map and flatMap
+map returns one output per input element, while flatMap can return multiple outputs and flattens the result.
+map():
+Applies a function to each element
+Returns same number of elements
+Input:
+rdd = sc.parallelize(["hello world", "hi"])
+rdd.map(lambda x: x.split(" ")).collect()
+Output:
+[['hello', 'world'], ['hi']]
+Output is nested (list inside list)
+ 
+flatMap():
+Applies a function + flattens the result
+Input:
+rdd = sc.parallelize(["hello world", "hi"])
+rdd.flatMap(lambda x: x.split(" ")).collect()
+Output:
+['hello', 'world', 'hi']
+Output is flattened (single list)
+
+When to Use What:
+map():
+One input → one output
+Structure should remain same
+flatMap():
+One input → multiple outputs
+Need flattened result
+
+Feature
+map()
+flatMap()
+Output size
+Same as input
+Can be more
+Structure
+Nested
+Flattened
+Use case
+Simple transform
+Expand + flatten
+
+
+
+
+30. Difference groupByKey vs reduceByKey
+In PySpark, both reduceByKey() and groupByKey() are used on RDDs with (key, value) pairs,
+reduceByKey is more efficient than groupByKey because it performs local aggregation before shuffle, reducing data transfer and improving performance.
+groupByKey()
+Groups all values for a key into a list
+Input:
+rdd = sc.parallelize([("a", 1),("a", 3),("b", 2),("b", 4)])
+rdd.groupByKey().collect() 
+Output:
+('a', [1, 3])
+('b', [2, 4])
+ Problems:
+No pre-aggregation no operation before shuffles
+High data shuffle
+High memory usage
+Can cause OOM (Out Of Memory)
+ 
+reduceByKey()
+Aggregates values using a function
+Input:
+rdd = sc.parallelize([("a", 1),("a", 3),("b", 2),("b", 4)])
+rdd.reduceByKey(lambda x, y: x + y).collect()
+Output:
+('a', 4)
+('b', 6)
+Benefits:
+Reduces data before shuffle
+Less network traffic
+Better performance
+ 
+When to Use What:
+Use reduceByKey():
+For aggregation ( x) ✅
+Use groupByKey():
+Only when you really need all values (rare case)
+ 
+Why NOT just use normal operations?
+Because data is distributed across partitions
+Without these function You can’t combine data across machines
+These functions: Bring related data together, Perform distributed aggregation
+
+groupByKey → slow (shuffle heavy)
+reduceByKey → efficient (combines before shuffle)
+
+
+Feature
+groupByKey ❌
+reduceByKey ✅
+Pre-aggregation
+❌ No
+✅ Yes
+Shuffle size
+High
+Low
+Memory usage
+High
+Low
+Performance
+Slow
+Fast
+Use case
+Rare
+Common
+
+31. How to calculate no. of partitions
+Number of Partitions
+Number of partitions in PySpark is calculated based on data size and cluster cores, typically using 128–256 MB per partition or 2–4 times the number of CPU cores.
+Suppose:
+Data = 50GB
+Cluster = 16 cores
+Step1:
+50GB / 128MB(HDFS block size (default ~128 MB)) ≈ 400 partitions
+Step2:
+16 × 4 cores = 64 partitions
+Use ~200–400 partitions
+Partitions = max( data_size / partition_size, 2–4 × total cores) 
+
+
+How to Check Partitions:
+df.rdd.getNumPartitions()
+ 
+
+32. What is CDC
+CDC (Change Data Capture) is a technique used to capture and process only data changes like inserts, updates, and deletes instead of reprocessing entire datasets.
+
+Types of Changes Captured:
+INSERT (new records)
+UPDATE (modified records)
+DELETE (removed records)
+
+How CDC Works :
+Timestamp-Based CDC
+df.filter("last_updated > last_run_time")
+Log-Based CDC:
+Reads database logs (like transaction logs)
+Trigger-Based CDC
+Database triggers track changes
+Snapshot-Based CDC:
+Compare old vs new data
+ 
+Benefits of CDC:
+Faster processing
+Less data movement
+Near real-time updates
+Cost efficient
+ 
+33.What is SCD(Slowly Changing Dimension)?
+
+SCD handles changes in dimension data over time
+
+Type 
+Behavior
+Historical Tracking
+Complexity
+Type 0
+Fixed; no updates allowed
+❌ None
+Low
+Type 1
+Overwrite old values
+❌ None
+Low
+Type 2
+Add new row for changes
+✅ Full history
+High
+Type 3
+Add a "Previous Value" column
+⚠️ Partial history
+Medium
+
+
+
+SCD Type 1 overwrites old data without maintaining history, while SCD Type 2 preserves history by inserting new records with versioning columns like start and end dates.
+ 
+SCD Type 1:
+Old data is overwritten with new data
+Before:
+id	name	city
+1	Hari	Delhi
+
+After:
+id	name	city
+1	Hari	Mumbai 
+
+Characteristics:]
+No history
+Simple
+Fast
+Use Case
+When history is not needed:
+Current address
+Latest status
+ 
+SCD Type 2 (History Maintained):
+New record is inserted instead of updating old one
+Before:
+id	name	city	start_date	end_date	is_current
+1	Hari	Delhi	2023-01-01	NULL		Y 
+ after:
+	id	name	city		start_date	end_date	is_current
+1	Hari	Delhi		2023-01-01	2024-01-01	N
+1	Hari	Mumbai	2024-01-01	NULL		Y
+
+Characteristics:
+Full history maintained
+More storage
+More complex
+ 
+Use Case:
+Customer address history
+Salary changes
+Audit tracking
+ 
+Implementation in PySpark:
+Type 1
+df_target = df_source
+target_table.alias("target").merge( new_df.alias("source"), "target.id = source.id" ).whenMatchedUpdateAll() \ .whenNotMatchedInsertAll() \ .execute() 
+
+Type 2 (Using Merge)
+# 1. Identify records that already exist and have changed
+changed_records = source_df.alias("s").join(
+    deltaTable.toDF().alias("t"), 
+    (col("s.id") == col("t.id")) & (col("t.is_current") == "Y")
+).where("s.salary <> t.salary OR s.name <> t.name")
+
+# 2. Give these changed records a 'null' key so the merge treats them as "Not Matched" (New)
+staged_updates = changed_records.selectExpr("NULL as mergeKey", "s.*") \
+    .union(source_df.selectExpr("id as mergeKey", "*"))
+
+# 3. Run the Merge
+deltaTable.alias("t").merge(
+    staged_updates.alias("s"),
+    "t.id = s.mergeKey AND t.is_current = 'Y'"
+).whenMatchedUpdate(
+    condition="t.salary <> s.salary OR t.name <> s.name",
+    set={
+        "is_current": "'N'",
+        "end_date": "current_date()"
+    }
+).whenNotMatchedInsert(values={
+    "id": "s.id",
+    "name": "s.name",
+    "salary": "s.salary",
+    "start_date": "current_date()",
+    "end_date": "null",
+    "is_current": "'Y'"
+}).execute()
+
+
+
+34. What is a Fact and Dimension Table?
+
+Fact tables store measurable numeric data for analysis, while dimension tables store descriptive attributes that provide context to facts in a data warehouse.
+Fact table:
+ A Fact table contains measurable, quantitative data (metrics).
+Characteristics:
+Stores numbers / measurements
+Contains foreign keys
+Used for analysis and aggregation
+Usually very large
+ 
+Examples of Facts:
+Sales amount 💰
+Quantity sold
+Profit
+Clicks
+Transactions 
+ 
+Fact Table Answer Questions Like:
+Total sales?
+Total revenue?
+How many products sold ?
+
+Dimension table:
+A Dimension table contains descriptive attributes
+Characteristics:
+Stores textual or categorical data
+Provides context to facts
+Smaller in size
+Used for filtering/grouping
+ 
+Examples of Dimensions:
+Customer 👤
+Product 📦
+Date 📅
+Location 🌍
+ 
+Dimension Table Answer Questions Like:
+Who bought?
+Which product?
+Where did sale happen?
+ 
+Difference fact vs dimension:
+ 
+Feature
+Fact Table 💰
+Dimension Table 📘
+Data type
+Numeric
+Descriptive
+Purpose
+Measurement
+Context
+Size
+Large
+Small
+Keys
+Foreign keys
+Primary keys
+Example
+Sales, profit
+Customer, product
+
+
+35.Star schema vs Snowflake schema:
+
+Star schema has a central fact table connected to denormalized dimension tables for faster queries, while snowflake schema normalizes dimension tables into multiple related tables for better data consistency but with more complex joins.
+ 
+What is Star Schema?
+A Star Schema is a data modeling structure where one Fact table is directly connected to multiple Dimension tables.
+
+Looks like star:
+  	  Customer
+|
+Product — Fact — Date
+|
+   Location 
+ 
+Characteristics:
+One central Fact table
+Multiple Denormalized Dimension tables
+Direct joins (no intermediate tables)
+Simple design 
+
+Example:
+Fact Table (Sales):
+product_id	customer_id	date_id	sales
+1		10		100		500
+Dimension Table (Customer):
+customer_id	name	city
+10		Hari	Delhi 
+ 
+Advantages:
+Fast queries ⚡
+Simple joins
+Easy to understand
+ 
+Disadvantages:
+Data redundancy in dimensions(multiple entry of same record)
+Less normalized - not split into multiple table
+
+ What is Snowflake Schema?
+A Snowflake Schema is an extension of Star Schema where dimensions are normalized into multiple related tables.
+ 
+Structure:
+Country
+|
+State
+|
+City
+|
+Customer — Fact — Product
+ 
+Characteristics:
+Fact table is same as Star schema
+Dimension tables are normalized
+Multiple related dimension tables
+ 
+Example:
+Customer Table
+| customer_id | name | city_id |
+
+City Table
+| city_id | city | state_id |
+
+State Table
+| state_id | state | country |
+
+Advantages:
+Less data redundancy 
+Better data integrity
+More structured
+Disadvantages:
+Complex joins 
+Slower queries than star schema
+Harder to understand
+
+ When to Use What:
+Use Star Schema when:
+Fast reporting needed 
+BI dashboards
+Simple analytics
+ 
+Use Snowflake Schema when:
+Data consistency is important
+Large enterprise systems
+Complex hierarchies exist
+
+ Real Spark Example:
+Star schema join:
+fact.join(customer).join(product) 
+
+Snowflake schema join:
+fact.join(customer).join(city).join(state).join(country)
+ 
+Difference:
+Feature
+Star Schema ⭐
+Snowflake Schema ❄️
+Structure
+Simple
+Complex
+Dimension design
+Denormalized
+Normalized
+Joins
+Fewer
+More
+Query speed
+Faster
+Slower
+Storage
+More
+Less
+Complexity
+Low
+High
+
+
+36. Join strategies in pyspark:
+join strategies used in pyspark:
+
+join strategies Spark uses in the Physical Plan to combine datasets efficiently.
+Spark automatically chooses the best one based on data size, memory, and configuration.
+ 
+Broadcast Join → small + large, no shuffle
+Hash Join → uses hash table, medium data
+Sort Merge Join → large datasets, uses sorting
+ 
+Difference between joins strategies :
+Feature
+Broadcast Join 🚀
+Hash Join ⚡
+Sort Merge Join 🐢
+Data Size
+Small + Large
+Medium
+Large + Large
+Shuffle
+❌ No
+✅ Yes
+✅ Yes
+Speed
+Fastest
+Medium
+Slower
+Memory Usage
+Low
+High
+Moderate
+
+
+ 
+Broadcast Join (Fastest  for small data):
+When used: One table is small enough to fit in memory
+How it works:
+Small table is broadcasted (copied) to all executors
+Large table stays distributed
+Join happens locally → no shuffle
+Example:
+Give a small cheat sheet to every student instead of making them share one
+ 
+Hash Join:
+When used:
+Datasets are medium-sized
+Can fit into memory (at least one side)
+ 
+How it works:
+Build a hash table on one dataset
+Scan the other dataset
+Match using hash lookup
+ 
+Steps:
+Shuffle both datasets → Partition by key → Build hash → Join
+ 
+Sort Merge Join (Most common for big data):
+When used:
+Both datasets are large
+Cannot fit in memory
+ 
+How it works:
+Shuffle both datasets
+Sort them by join key
+Merge them like merge-sort
+ 
+Steps:
+Shuffle → Sort → Merge Join
+ 
+Pros:
+Works for very large datasets
+Memory efficient
+ 
+Cons:
+Slower due to sorting
+
+37. Types of plan created in pyspark
+
+Types of Plans in PySpark:
+
+Unresolved Logical Plan:
+This plan is "unresolved" because Spark does not yet know if the column names or table names you used actually exist, or what their data types are. 
+It only checks if the query is syntactically correct.
+
+Analyzed Logical Plan :
+Spark takes the Unresolved Logical Plan and consults the Catalog 
+What happens:
+It verifies that the table actually exists.
+It checks if the column is present.
+It assigns data types (e.g., Integer, String) to the columns. 
+If a column or table name is misspelled, the process fails here with an AnalysisException.
+
+ 
+Optimized Logical Plan:
+This is created using Catalyst Optimizer
+ It optimizes the query without changing the final output
+What happens:
+Spark improves the plan for better performance
+Use below strategies:
+Predicate Pushdown: Moving filters (.filter() or .where()) as close to the data source as possible so Spark reads less data from disk.
+Projection Pruning: Selecting only the columns actually needed for the final output, ignoring the rest.
+Constant Folding: Evaluating constant expressions at compile-time (e.g., converting 1 + 1 directly to 2).
+Reordering operations
+
+Example:
+Apply filter before select if beneficial
+Remove unused columns
+ 
+Physical Plan:
+Physical Plan turns Optimized Logical Plan into executable code (Low-level RDD operations).
+What happens:
+Spark generates multiple physical plans and evaluates them using a Cost-Based Model (CBO) (estimating CPU, memory, and I/O costs).
+Chooses strategies like:
+Hash Join
+Sort Merge Join
+Broadcast Join
+chosen plan is selected as the Selected Physical Plan, which is then broken down into DAG stages and tasks for cluster execution.
+ 
+ DAG Plan:
+After physical plan:
+Spark creates:
+DAG (Directed Acyclic Graph)
+Stages
+Tasks
+ 
+Flow :
+User Code
+↓
+Logical Plan (Unoptimized)
+↓
+Optimized Logical Plan
+↓
+Physical Plan
+↓
+DAG → Stages → Tasks
+↓
+Execution 
+
+38 . OLTP vs OLAP 
+OLTP systems handle real-time transactional operations with normalized data, while OLAP systems are designed for analytical queries on large, denormalized datasets
+
+
+Feature
+OLTP 🟢
+OLAP 🔵
+Purpose
+Transactions
+Analysis
+Operations
+Insert/Update/Delete
+Read (SELECT)
+Data Size
+Small per query
+Large
+Schema
+Normalized
+Denormalized
+Speed
+Fast writes
+Fast reads
+Users
+End users/apps
+Analysts
+Example
+Banking system
+Data warehouse
+
+
+
+
+OLTP (Online Transaction Processing):
+Managing day-to-day transactional operations
+ 
+Example:
+Banking transactions 💳
+Order processing 🛒
+ATM systems
+ 
+Characteristics:
+Handles small, frequent transactions
+Data is highly normalized
+Focus on fast inserts/updates
+Used by applications
+ 
+Practical example:
+Customer buys product
+→ Insert order
+→ Update inventory
+→ Process payment
+ 
+Technology Examples:
+MySQL
+PostgreSQL
+Oracle
+ 
+OLAP (Online Analytical Processing):
+Analyzing large amounts of data
+ 
+Examples:
+Sales analysis 📊
+Business reports
+Data warehousing
+ 
+Characteristics:
+Handles large data scans
+Data is denormalized (Star schema)
+Focus on read-heavy queries
+Used by analysts / BI tools
+ 
+Practical example :
+Analyze:
+→ Total sales per month
+→ Top-selling products
+→ Customer trends
+ 
+Technology Examples:
+Snowflake
+Redshift
+BigQuery
+Spark
+
+39. Medallion Architecture:
+Medallion Architecture is a data design pattern where data is organized into Bronze (raw), Silver (clean), and Gold (business-ready) layers
+
+Named after medals:
+🥉 Bronze → Raw data
+Original data
+No changes
+
+🥈 Silver → Cleaned data
+Remove duplicates
+Handle nulls
+Fix types
+
+🥇 Gold → Final insights
+Aggregations
+KPIs (key point indicator)
+Create Metrics: like revenue using price and quantity
+Reports:
+Final structured data shown to users
+Example:
+City-wise Sales Report
+City     	Revenue
+Delhi    	20000
+Mumbai   	15000 
+ 
+Most modern companies use this pattern for:
+Scalability
+Data quality
+Easy debugging
+ 
+40. data lake vs data ware house vs Delta lake
+Data Lake stores raw data in any format, Data Warehouse stores structured and processed data for analytics, and Delta Lake enhances data lakes by adding ACID transactions, schema enforcement, and performance optimizations.
+ 
+Data Lake
+A Data Lake is a storage system that stores raw data in any format (structured, semi-structured, unstructured)
+ 
+Key Points:
+Stores:CSV, JSON, logs, images, etc.
+Schema applied later (schema-on-read)
+Cheap storage
+Used for data science & big data
+ 
+Example:
+Raw API data
+Logs from applications
+IoT data
+ 
+Data Warehouse:
+A Data Warehouse stores structured, cleaned, and processed data for analytics and reporting.
+ 
+Key Points:
+Only structured data
+Schema applied before storing (schema-on-write)
+Optimized for SQL queries
+Used by BI tools 
+ 
+Example:
+Sales reports
+Business dashboards
+ 
+Delta Lake:
+Delta Lake is a storage layer on top of Data Lake that adds reliability and performance features (like a data warehouse). Mixture of data lake and data warehouse
+ 
+Delta Lake = Data Lake + ACID + Performance + Reliability
+ 
+Key Features:
+ACID transactions ✅
+Schema enforcement & evolution ✅
+Handles updates/deletes
+Data versioning
+ 
+Example:
+Incremental pipelines
+CDC + SCD Type 2
+Reliable data lake
+
+Feature
+Data Lake 🏞️
+Data Warehouse 🏢
+Delta Lake 🚀
+Data Type
+All types
+Structured only
+All types
+Schema
+On Read
+On Write
+Hybrid
+Cost
+Low
+High
+Medium
+Performance
+Low
+High
+High
+ACID
+❌ No
+✅ Yes
+✅ Yes
+Use Case
+Raw storage
+Reporting
+Modern analytics
+
+ 
+41. What is Z-Ordering?
+Z-Ordering is a data optimization technique used in Delta Lake (with PySpark) to physically reorder data based on one or more columns so that related data is stored closer together.
+ 
+Before Z-Ordering, data is randomly distributed across files, so Spark scans all files during filtering. After applying Z-Ordering, related data is clustered together, allowing Spark to skip irrelevant files and significantly reduce scan time.
+ 
+Why Do We Need It?
+Even after partitioning:
+Data inside files is still random ❌
+Queries scan unnecessary data ❌
+ 
+How to Implement (PySpark / SQL):
+spark.sql("""
+OPTIMIZE sales_table
+ZORDER BY (city, user_id)
+""") 
+ 
+What happen:
+BEFORE Z-ORDERING
+Delhi data spread everywhere
+Scan File 1, 2, 3
+ 
+File 1
+city 		user_id
+Delhi 		1
+Mumbai 	2
+Delhi 		3
+File 2
+	city     		user_id
+Bangalore 	4
+Delhi     	5
+Mumbai     	6
+File 3
+city     		user_id
+Delhi      	7
+Chennai    	8
+Mumbai     	9 
+
+
+After z ordering:
+Delhi data grouped together
+Mostly scan File 1 & part of File 2 , Skip File 3 completely
+
+File 1
+city 		user_id
+Delhi 		1
+Delhi 		3
+Delhi 		5
+File 2
+city 		user_id
+Delhi 		7
+Mumbai 	2
+Mumbai 	6
+File 3 
+city     		user_id
+Mumbai    	 9
+Bangalore  	4
+Chennai    	8 
+Benefits
+Faster Queries
+Better Data Skipping
+Multi-Column Optimization
+ 
+When to Use Z-Ordering?
+Large tables
+Frequent filtering on columns
+Partitioning alone is not enough
+ 
+When NOT to Use
+Small datasets
+Frequently updated tables
+Too many columns in ZORDER
+ 
+
+ 
+  
+42.deployment modes in Apache Spark
+Local Mode:
+Runs everything on a single machine (your laptop/server)
+No cluster involved
+Used for: Development and Testing 
+ 
+Standalone Mode :
+Spark has its own built-in cluster manager
+You create a cluster with: Master node and Worker nodes
+Feature:
+Simple to set up
+Good for small–medium workloads 
+ 
+Client Mode:
+Driver program runs on your machine
+Executors run on cluster
+Use when : You want logs/output locally
+ 
+ Cluster Mode:
+Driver runs inside the cluster
+Fully managed by cluster manager
+Use when:
+Running production jobs
+No dependency on local machine
+ 
+
+43. Explain Your Project :
+I worked on a sports nutrition brand project where I built an end-to-end ETL pipeline using PySpark and AWS services.
+Data was ingested from multiple sources like sales, inventory, and customer datasets and stored in Amazon S3 as raw data.
+For processing, I used AWS Glue with PySpark to clean and transform the data—handling null values, removing duplicates, standardizing formats, and applying joins and aggregations.
+I also used AWS Lambda for event-driven validation when new data arrived in S3.
+Finally, I generated analytics-ready datasets for reporting and optimized the pipeline using partitioning, broadcast joins, and proper file sizing.
+I was also responsible for monitoring and resolving data quality issues to ensure reliable data delivery.
+
+  44. Partitioning & bucketing
+Partitioning
+df.write.partitionBy("country").parquet("path")
+Structure :
+/path/country=IN/
+/path/country=US/
+  
+Bucketing:
+Bucketing divides data into a fixed number of buckets using a hash function on a column.
+df.write.bucketBy(4, "user_id").saveAsTable("bucketed_table")
+Structure: if there is 10 user =user_id%4
+
+/warehouse/tablespace/managed/hive/users_bucketed/
+Part-00000-xxxx.snappy.parquet (remainder=0)
+Part-00001-xxxx.snappy.parquet (remainder=1)
+Part-00002-xxxx.snappy.parquet (remainder=2)
+part-00003-xxxx.snappy.parquet (remainder=3)
+
+
+ 45. How to execute SQL in pyspark:
+Execute SQL on an Existing DataFrame
+df.createOrReplaceTempView("people")
+result = spark.sql("SELECT name FROM people WHERE age > 21")
+result.show() 
+ 
+ Direct Querying
+# Reference the python variable 'df' directly in the string to exist dataframe
+spark.sql("SELECT * FROM {df} WHERE id > 5", df=df).show() 
+
+ Using Parameterized Queries:
+spark.sql("SELECT * FROM table WHERE country = :c", c="USA").show() 
+
+46. What is SparkSession in Pyspark?  
+SparkSession is the entry point to PySpark and is the replacement of SparkContext since PySpark version 2.0. 
+This acts as a starting point to access all of the PySpark functionalities related to RDDs, DataFrame, Datasets etc.
+Sparksession include SQLContext, StreamingContext, HiveContext and all other context
+
+
+47. Is PySpark faster than pandas?  
+PySpark supports parallel execution of statements in a distributed environment, i.e on different cores and different machines which are not present in Pandas. This is why PySpark is faster than pandas.
+  
+
+ 48.What do you understand by startsWith() and endsWith() methods?
+startsWith() – returns boolean Boolean value. It is true when the value of the column starts with the specified string and False when the match is not satisfied in that column value.
+endsWith() – returns boolean Boolean value. It is true when the value of the column ends with the specified string and False when the match is not satisfied in that column value.
+ 
+
+
+ 49. How to handle Out of Memory (OOM) Errors?
+
+
+50. Why Schema Evolution is important?
+In real-world pipelines, source systems frequently change schema by adding/removing columns. Schema evolution helps pipelines adapt automatically without failure.
+ 
+51. Orchestration in data engineer ?
+Orchestration is the automated coordination and management of multiple tasks in a data pipeline, including scheduling, dependencies, retries, and monitoring.
+
+feature
+Automatic scheduling
+Dependency management
+Retry on failure
+Monitoring & alerts
+Altering on event
+ 
+What Orchestration Handles?
+Feature	Meaning
+Scheduling	Run daily/hourly
+Dependency	Correct task order
+Retry		Retry failed tasks
+Monitoring	Track status
+Alerting	Notify failures
+ 
+ETL-Process data ,Orchestration-Manage workflow
+
+ 52.aws glue and aws lambda:
+AWS Glue is a managed ETL (Extract, Transform, Load) service designed for processing large datasets and managing metadata, while AWS Lambda is a general-purpose, event-driven serverless compute service for running short-lived code
+
+
+Feature 
+AWS Lambda
+AWS Glue (Spark Jobs)
+Primary Use Case
+Real-time, event-driven tasks & microservices.
+Large-scale, batch ETL and data integration.
+Timeout Limit
+15 minutes.
+Up to 48 hours (default) or longer.
+Processing Power
+Single-node execution; limited memory (up to 10 GB).
+Distributed processing (Apache Spark) for TBs of data.
+Startup Speed
+Sub-second (millisecond) response.
+Minutes (due to cluster provisioning).
+Data Management
+None built-in.
+Includes Data Catalog and automated Crawlers.
+
+ 
+Choose AWS Lambda if:
+You need to process small, individual files (e.g., resizing an image as it lands in S3).
+You are building a backend for a mobile or web application.
+Your task finishes in seconds or a few minutes.
+You need near-instant startup for real-time responsiveness.
+ 
+Choose AWS Glue if:
+You are performing complex transformations (joins, aggregations) on huge datasets.
+You need to maintain a metadata schema (Data Catalog) for querying via Athena or Redshift.
+Your ETL process requires distributed computing power to handle Gigabytes or Terabytes.
+ 
+
+ 53. How would you handle schema changes in production when CSV files increase from 10 columns to 15 columns? 
+Avoid Hardcoded Schema Wherever Possible
+Use dynamic schema handling
+Read incoming schema at runtime
+
+Use Schema Evolution Strategy
+Allow new columns to be added
+Existing pipeline should still process old columns safely
+ 
+Glue Catalog
+
+ column-name-based transformations instead of hardcoded positional logic. 
+
+This ensures new columns do not break the pipeline while still maintaining data quality and monitoring.
+ 
+ 54. What do you mean by serverless?
+Serverless means the cloud provider manages the infrastructure automatically, 
+including provisioning, scaling, and maintenance. 
+As engineers, we focus only on application or ETL logic without managing servers manually.
+ 
+55. explain SparkSession.builder.appName("ProjectCount").getOrCreate()
+SparkSession
+Main class used to interact with Spark. 
+Builder
+Used to configure the Spark application before creating session.
+appName("ProjectCount")
+Sets the Spark application name.
+This name appears in: Spark UI, Logs, Monitoring tools
+getOrCreate()
+If Spark session already exists → use existing one
+Otherwise → create new Spark session
+Prevents multiple unnecessary Spark sessions.
+
+ 56. Types of OOM (Out Of Memory) in Spark:
+Driver Out Of Memory: (Driver node memory gets exhausted)
+Common Causes
+Using collect() on huge data
+Large broadcast variables
+Too much metadata/logging
+Very large result set returned to driver
+Solution
+Avoid collect() on large data
+Use show() or limit()
+Increase driver memory
+Write output to storage instead
+ 
+Executor Out Of Memory: (Executor memory becomes insufficient during task execution.)
+Common Causes
+Large shuffle operations
+Data skew
+Huge joins/groupBy
+Large partitions
+Caching excessive data
+Solution
+Repartition data properly
+Increase executor memory
+Optimize joins
+Use broadcast joins
+Reduce shuffle
+   
+Shuffle OOM: (OOM during shuffle stage)
+ Usually occurs in:
+joins
+groupBy
+orderBy
+Distinct
+Causes
+Large shuffle partitions
+Data skew
+Insufficient memory
+Solution
+Tune shuffle partitions
+Use salting for skew
+Optimize joins
+Increase memory
+
+Cache/Persist OOM: (Cached DataFrames consume excessive memory)
+ Causes
+Caching huge datasets unnecessarily
+Multiple cached DataFrames
+Solution
+Use unpersist()
+Cache only reused datasets
+Use MEMORY_AND_DISK strategy
+
+  
+57. When can we go for Parquet file format and when can we go for Avro file format?
+
+Feature
+Parquet
+Avro
+Storage Type
+Columnar
+Row-based
+Best For
+Analytics
+Streaming/Data Exchange
+Query Performance
+Faster
+Slower
+Compression
+Better
+Moderate
+Schema Evolution
+Supported
+Strong support
+Column Pruning
+Yes
+No
+Predicate Pushdown
+Yes
+Limited
+Read Pattern
+Column-wise
+Row-wise
+
+
+
+ 
+  58. it is required by our client, and it has customer sensitive information, some other information also, okay? How would you hide the customer sensitive information in the table?
+If a table contains sensitive customer information, we usually protect it using:
+
+Data masking:
+Hide sensitive values partially.-   a***@gmail.com
+Encryption:
+Encrypt sensitive columns
+Access control
+Using IAM role
+Tokenization
+Replace original value with token.
+Hashing
+Convert sensitive values into irreversible hash.
+ 
+ 
+59. In between bucketby and partitionby which is having higher Cardinality?
+Partitioning is preferred for low cardinality columns because it creates separate directories. Bucketing is better for high cardinality columns because it distributes data into fixed buckets using hashing and avoids creating too many small partitions. 
+  
+ 
+ 60. difference between external and managed tables?
+
+Managed Table
+External Table
+Spark/Hive manages both metadata and data
+Spark/Hive manages only metadata
+Data gets deleted if table is dropped
+Data remains even after table drop
+Data stored in warehouse location by default
+Data stored in custom external location
+Mostly used for temporary/internal processing
+Used for shared production data
+Easier management
+Better control over storage
+
+
+Managed Table Example
+CREATE TABLE emp (id INT,name STRING); 
+ If table is dropped both data and meta data will deleted
+ External Table Example
+CREATE TABLE emp (id INT,name STRING); 
+LOCATION 's3://bucket/emp/';
+ If table is dropped only meta data will deleted
+Data in S3 remains safe.
+
+  
+ 
+ 
+  
+ 
+ 
+  
+ 
+ 
+ 
+  
+ 
+
+
+ 
+ 
+  
+ 
+
+
+ 
+
+
+
+
+Batch & Streaming (if possible)
+
+
+

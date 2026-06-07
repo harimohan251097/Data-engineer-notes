@@ -1,0 +1,1139 @@
+1. GROUP_CONCAT
+Definition:
+ The GROUP_CONCAT() function is an aggregate function in MySQL that concatenates values from multiple rows into a single string, separated by a specified delimiter. It helps combine column values into a single result.
+Example:
+SELECT GROUP_CONCAT(name SEPARATOR ',') FROM EMPLOYEE;
+
+Input Table (EMPLOYEE):
+name
+-----
+hari
+mohan
+meena
+
+Output:
+hari,mohan,meena
+
+
+2. CONCAT() and CONCAT_WS()
+Definition:
+CONCAT() → Joins multiple strings or column values into one string (no separator).
+
+
+CONCAT_WS(separator, …) → Joins values using a specified separator between them.
+
+
+Examples:
+SELECT CONCAT_WS("-", "SQL", "Tutorial", "is", "fun!");
+-- Output: SQL-Tutorial-is-fun!
+
+SELECT CONCAT('Ram','is','a','good','student') AS ExampleConcat;
+-- Output: Ramisagoodstudent
+
+SELECT CONCAT_WS(' ','Ram','is','a','good','student') AS ExampleConcatWS;
+-- Output: Ram is a good student
+
+
+3. TRUNCATE()
+Definition:
+ The TRUNCATE() function truncates (shortens) a number to the specified number of decimal places. Unlike rounding, it simply removes extra digits instead of adjusting the value.
+Example:
+SELECT TRUNCATE(135.375, 2);
+
+Output:
+135.37
+
+
+4. JOIN (INNER, LEFT, RIGHT, FULL)
+Definition:
+ A JOIN is used to combine rows from two or more tables based on a related column. Different joins control which records are included in the result set.
+INNER JOIN: Returns only rows with matching values in both tables.
+
+
+LEFT JOIN: Returns all rows from the left table + matching rows from right.
+
+
+RIGHT JOIN: Returns all rows from the right table + matching rows from left.
+
+
+FULL JOIN: Combines results of LEFT and RIGHT joins (all rows).
+
+
+Example (Simplified):
+SELECT t1.id, t2.value
+FROM T1
+INNER JOIN T2 ON t1.id = t2.id;
+
+Sample Tables:
+T1: 1,2,3,4,null,null
+T2: 5,6,2,4,null
+
+Outputs:
+INNER JOIN → 2,4
+
+
+LEFT JOIN → 1,2,3,4,null,null (with nulls for unmatched right)
+
+
+RIGHT JOIN → 5,6,2,4,null (with nulls for unmatched left)
+
+
+FULL JOIN → union of all above (9 row) left join+right join - inner join 
+1	NULL
+2	2
+3	NULL
+4	4
+NULL	NULL
+NULL	NULL
+NULL	5
+NULL	6
+NULL	NULL
+
+
+
+5. EXISTS
+Definition:
+ The EXISTS operator is used to test whether a subquery returns any rows. If the subquery returns at least one row, EXISTS evaluates to true.
+Example:
+SELECT SupplierName 
+FROM Suppliers 
+WHERE EXISTS (
+  SELECT ProductName 
+  FROM Products 
+  WHERE Products.SupplierID = Suppliers.SupplierID 
+    AND Price < 20
+);
+
+Output:
+ Returns all supplier names who have at least one product priced below 20.
+
+6. SELECT INTO
+Definition:
+ The SELECT INTO statement creates a new table and copies data from an existing table into it.
+Example:
+SELECT * 
+INTO newtable
+FROM oldtable
+WHERE condition;
+
+Output:
+A new table newtable is created with the same structure and data as oldtable (filtered by condition).
+7. UPDATE
+Definition:
+ The UPDATE statement is used to modify existing records in a table. You can update one or multiple columns at once, usually with a WHERE clause to limit rows.
+Example:
+UPDATE Employees 
+SET salary = salary * 1.1 
+WHERE department = 'HR';
+
+Output:
+All employees in the HR department will get a 10% salary increase.
+
+
+
+8. DELETE
+Definition:
+ The DELETE statement removes one or more rows from a table. Use the WHERE clause to specify which rows to delete; otherwise, all rows will be deleted.
+Example:
+DELETE FROM Employees 
+WHERE department = 'Finance';
+
+Output:
+All employees in the Finance department will be deleted.
+
+
+
+9. LIMIT
+Definition:
+ The LIMIT clause restricts the number of rows returned by a query. It is useful for pagination or sampling data.
+Examples:
+SELECT * FROM Customers LIMIT 10;
+-- Returns the first 10 rows
+
+SELECT * FROM Customers 
+LIMIT (SELECT COUNT(*)*50/100 FROM Customers);
+-- Returns 50% of total rows
+
+
+10. Wildcards with LIKE
+Definition:
+ Wildcards are special characters used with the LIKE operator in SQL to search for patterns in strings.
+% → matches 0 or more characters
+
+
+_ → matches exactly one character
+
+
+[abc] → matches one character in list
+
+
+[^abc] → matches one character not in list
+
+
+[a-d] → matches characters in range
+
+
+Examples:
+SELECT * FROM Employees WHERE name LIKE '%hm%';  -- contains "hm"
+SELECT * FROM Employees WHERE name LIKE 'h_m';   -- h + any + m
+SELECT * FROM Employees WHERE name LIKE 'h[ot]m'; -- hom or htm
+
+
+11. HAVING
+Definition:
+ The HAVING clause is used with aggregate functions to filter groups. Unlike WHERE, which filters rows, HAVING filters aggregated results after GROUP BY.
+Example:
+SELECT department, COUNT(*) AS total
+FROM Employees
+GROUP BY department
+HAVING COUNT(*) > 5;
+
+Output:
+Returns only departments with more than 5 employees.
+
+
+
+12. INSERT INTO … SELECT
+Definition:
+ This statement copies data from one table and inserts it into another. It is useful for duplicating data or migrating between tables.
+Example:
+INSERT INTO EmployeesBackup (id, name, salary)
+SELECT id, name, salary 
+FROM Employees
+WHERE department = 'IT';
+
+Output:
+All IT department employees are copied into EmployeesBackup.
+
+
+13. CASE
+Definition:
+ The CASE expression allows conditional logic in SQL. It works like an IF-THEN-ELSE statement and returns a value when the first matching condition is met.
+Example:
+SELECT name,
+  CASE 
+    WHEN salary > 50000 THEN 'High Salary'
+    WHEN salary BETWEEN 30000 AND 50000 THEN 'Medium Salary'
+    ELSE 'Low Salary'
+  END AS salary_category
+FROM Employees;
+
+Output:
+Each employee is classified into High, Medium, or Low salary categories.
+
+
+
+14. COALESCE() and NVL()
+Definition:
+COALESCE(expr1, expr2, …) returns the first non-NULL value in the list.
+
+
+NVL(expr, replacement) (Oracle only) replaces NULL with the given replacement value.
+
+
+Example:
+SELECT ProductName, 
+       COALESCE(UnitsInStock, 0) + COALESCE(UnitsOnOrder, 0) AS TotalUnits
+FROM Products;
+
+Output:
+Returns product name and total units, treating NULL values as 0.
+
+
+
+15. Comments in SQL
+Definition:
+ Comments are used to explain SQL code. They are ignored by the SQL engine.
+Examples:
+-- Single-line comment
+
+/* Multi-line
+   comment */
+
+
+16. DROP
+Definition:
+ The DROP statement permanently deletes a database object like a table, database, or view. Once dropped, the object cannot be recovered unless backed up.
+Examples:
+DROP TABLE Employees;     -- Deletes table
+DROP DATABASE CompanyDB;  -- Deletes entire database
+
+
+17. BACKUP DATABASE (SQL Server only)
+Definition:
+ The BACKUP DATABASE command is used in SQL Server to create a backup of an existing database.
+Example:
+BACKUP DATABASE testDB 
+TO DISK = 'D:\backups\testDB.bak';
+
+Output:
+Creates a .bak file containing a backup of the database testDB.
+
+
+
+18. ALTER TABLE
+Definition:
+ The ALTER TABLE command modifies the structure of an existing table. It can be used to add, drop, rename, or change columns.
+Examples:
+-- Add a new column
+ALTER TABLE Customers ADD COLUMN Email VARCHAR(255);
+
+-- Delete a column
+ALTER TABLE Customers DROP COLUMN Email;
+
+-- Modify column datatype
+ALTER TABLE Customers MODIFY COLUMN Age INT;
+
+-- Rename a column
+ALTER TABLE Customers RENAME COLUMN old_name TO new_name;
+
+Output:
+Changes table structure as specified (e.g., new column added, old column dropped).
+
+
+19. Constraints
+Definition:
+ Constraints in SQL define rules for the data in a table. They ensure data integrity and prevent invalid data entry.
+Common Constraints:
+NOT NULL → Prevents NULL values
+
+
+UNIQUE → Ensures all values in a column are unique
+
+
+PRIMARY KEY → Combination of NOT NULL and UNIQUE, uniquely identifies each row
+
+
+FOREIGN KEY → Ensures referential integrity by linking tables
+
+
+CHECK → Ensures values satisfy a condition
+
+
+DEFAULT → Sets a default value if none is provided
+
+
+Example:
+CREATE TABLE Students (
+    StudentID INT PRIMARY KEY,
+    Name VARCHAR(50) NOT NULL,
+    Age INT CHECK (Age >= 18),
+    DepartmentID INT,
+    FOREIGN KEY (DepartmentID) REFERENCES Departments(DepartmentID)
+);
+
+
+20. SQL Injection
+Definition:
+ SQL Injection is a security vulnerability that allows attackers to interfere with SQL queries by injecting malicious input. It can lead to unauthorized access, data leaks, or data loss.
+Example of Injection-Prone Query:
+SELECT * FROM Users 
+WHERE username = ' " + userInput + " ' 
+AND password = ' " + passInput + " ';
+
+Malicious Input:
+username = admin
+password = ' OR '1'='1
+
+Result:
+Attack bypasses authentication and logs in as admin.
+
+
+Prevention:
+Use prepared statements or parameterized queries.
+
+
+
+21. Date & Time Functions
+Definition:
+ SQL provides built-in functions to manipulate date and time values.
+Common Functions:
+NOW() → Current date and time
+
+
+CURDATE() → Current date
+
+
+CURTIME() → Current time
+
+
+DATE_ADD(date, INTERVAL n unit) → Add time
+
+
+DATEDIFF(date1, date2) → Difference in days
+
+
+DATE_FORMAT(date, format) → Format date
+ 
+Date: DATE(datetime field)
+
+
+Year: YEAR(date_field)
+
+
+Month: MONTH(date_field)
+
+
+Day: DAY(date_field)
+
+
+Day of Week (1-7): DAYOFWEEK(date_field)
+
+
+Day Name: DAYNAME(date_field) 
+
+
+
+Examples:
+SELECT NOW();                      -- 2025-09-04 10:25:30
+SELECT CURDATE();                  -- 2025-09-04
+SELECT DATE_ADD(CURDATE(), INTERVAL 7 DAY); -- 2025-09-11
+SELECT DATEDIFF('2025-12-31','2025-01-01'); -- 364
+
+
+22. Advanced SQL Functions
+Definition:
+ SQL provides advanced functions for string, numeric, and system operations.
+Examples:
+SELECT UPPER('sql');   -- SQL
+SELECT LOWER('SQL');   -- sql
+SELECT LENGTH('Hari'); -- 4
+SELECT ROUND(123.456,2); -- 123.46
+SELECT ABS(-15); -- 15
+
+
+23. MySQL vs PostgreSQL
+Definition:
+ Both MySQL and PostgreSQL are popular relational database systems, but they have differences in performance, features, and use cases.
+Comparison:
+Feature
+MySQL
+PostgreSQL
+Speed
+Faster for read-heavy queries
+Faster for complex queries
+ACID Compliance
+Partial (depends on engine)
+Full ACID compliance
+JSON Support
+Basic JSON functions
+Advanced JSON & indexing
+Extensibility
+Limited
+Highly extensible (custom functions)
+Use Cases
+Web apps, CMS
+Data analytics, enterprise apps
+
+
+24. Window Functions
+Definition:
+ Window (or analytic) functions perform calculations across a set of rows related to the current row, without collapsing rows like GROUP BY.
+Common Functions:
+ROW_NUMBER() → Assigns row numbers
+
+
+RANK() → Assigns rank with gaps for ties
+
+
+DENSE_RANK() → Assigns rank without gaps
+
+
+NTILE(n) → Divides rows into n buckets
+
+
+LAG() / LEAD() → Access previous/next row values
+
+
+Example:
+SELECT name, salary,
+       RANK() OVER (ORDER BY salary DESC) AS rank
+FROM Employees;
+
+Output:
+name   | salary | rank
+-----------------------
+Mohan  | 90000  | 1
+Hari   | 75000  | 2
+Meena  | 75000  | 2
+Ravi   | 50000  | 4
+
+25. Transactions
+Definition:
+ A transaction is a sequence of SQL statements that are executed as a single unit of work. It ensures ACID properties (Atomicity, Consistency, Isolation, Durability).
+Key Commands:
+BEGIN / START TRANSACTION → Start a transaction
+
+
+COMMIT → Save changes
+
+
+ROLLBACK → Undo changes
+
+
+Example:
+START TRANSACTION;
+UPDATE Accounts SET balance = balance - 500 WHERE id = 1;
+UPDATE Accounts SET balance = balance + 500 WHERE id = 2;
+COMMIT;
+
+Output:
+Money transferred safely between accounts.
+
+
+
+26. Indexes
+Definition:
+ An index improves query performance by allowing faster lookups in a table, similar to a book’s index. However, indexes increase storage and slow down writes (INSERT/UPDATE).
+instead of scanning every row, SQL can quickly locate the required data.
+Example:
+CREATE INDEX idx_name ON Employees(name);
+
+Output:
+Queries filtering by name become faster. 
+ 
+Type of index:
+Clustered Index	
+Determines the physical order of data in the table.
+A table can have only one clustered index because data can be stored in only one order.
+In many databases, the Primary Key is implemented as a clustered index by default.
+CREATE TABLE employee(
+id INT PRIMARY KEY,
+name VARCHAR(50)
+);
+
+Non-Clustered Index:
+Stores index data separately from the actual table data.
+Contains pointers to the actual rows.
+A table can have multiple non-clustered indexes.
+ CREATE  INDEX idx_email
+ON employees(email);
+
+Unique Index
+Ensures duplicate values are not allowed.
+Improves lookup performance while enforcing uniqueness.
+ CREATE UNIQUE INDEX idx_city
+ON employees(city);
+
+Composite Index (Multi-column):
+Created on multiple columns.
+Useful when queries frequently filter on multiple columns together.
+CREATE INDEX idx_name_city
+ON employees(name, city);
+
+B-Tree Index (Most Common):
+Most databases use B-Tree indexes by default.
+
+Bitmap Index:
+Uses bitmaps for low-cardinality columns.
+Best For Columns with few distinct values:
+Gender
+ 
+Hash Index:
+Uses hash table internally.
+Best For Equality searches:
+WHERE id = 101
+
+Full-Text Index:
+Used for searching textual data efficiently.
+
+27. Views
+Definition:
+ A view is a virtual table based on the result of an SQL query. It does not store data itself but provides a way to simplify queries.
+Example:
+CREATE VIEW HighSalary AS
+SELECT name, salary 
+FROM Employees
+WHERE salary > 60000;
+
+Output:
+A virtual table HighSalary containing only employees with salary > 60000.
+
+
+
+28. Joins
+Definition:
+ A JOIN combines rows from two or more tables based on related columns.
+Types of Joins:
+INNER JOIN → Returns matching rows only
+
+
+LEFT JOIN → All rows from left + matches from right
+
+
+RIGHT JOIN → All rows from right + matches from left
+
+
+FULL JOIN → All rows from both, matching where possible
+
+
+Example:
+SELECT e.name, d.department_name
+FROM Employees e
+INNER JOIN Departments d
+ON e.department_id = d.id;
+
+Output:
+Employee names with their department names.
+
+
+
+29. Normalization
+Definition:
+ Normalization is the process of organizing data in a database to reduce redundancy and improve data integrity.
+Forms of Normalization:
+1NF → Atomic values (no repeating groups)
+No multiple values in one column
+before
+id	name	skills
+1	Hari	Python, SQL 
+after 
+id	name	skill
+1	Hari	Python
+1	Hari	SQL 
+
+
+
+2NF → 1NF + no partial dependency
+student_name depends only on student_id
+course_name depends only on course_id
+This is partial dependency.
+
+before:
+student_id	course_id	student_name	course_name
+1	101	Hari	PySpark
+After:
+Enrollment Table
+student_id	course_id
+1	101
+Course Table
+course_id	course_name
+101	PySpark
+Student Table
+student_id	student_name
+1	Hari
+
+
+3NF → 2NF + no transitive dependency:
+dept_name depends on dept_id
+Before:
+emp_id	emp_name	dept_id	dept_name
+1		Hari		10		Data Eng
+After:
+Employee Table
+emp_id	emp_name	dept_id
+1		Hari		10
+Department Table
+dept_id	dept_name
+10		Data Eng
+
+
+BCNF → Stronger form of 3NF
+Before
+Student_ID
+Subject
+Professor
+101
+Math
+Dr. Smith
+101
+Physics
+Dr. Green
+102
+Math
+Dr. Jones
+103
+Physics
+Dr. Green
+
+ 
+after
+Student_ID
+Professor
+101
+Dr. Smith
+101
+Dr. Green
+102
+Dr. Jones
+103
+Dr. Green
+
+
+Professor
+Subject
+Dr. Smith
+Math
+Dr. Green
+Physics
+Dr. Jones
+Math
+
+Now delete any student data does not effect professor data
+Example:
+Instead of storing department name repeatedly in Employees, store it once in Departments table and link with a department_id.
+
+
+
+30. Stored Procedures
+Definition:
+ A stored procedure is a set of SQL statements saved in the database that can be executed with a single call. It helps in reusability and better performance.
+Example:
+CREATE PROCEDURE GetHighSalaryEmployees()
+BEGIN
+   SELECT * FROM Employees WHERE salary > 60000;
+END;
+
+Execution:
+CALL GetHighSalaryEmployees();
+
+
+31. Triggers
+Definition:
+ A trigger is a set of SQL statements that automatically executes in response to certain events (INSERT, UPDATE, DELETE) on a table.
+Example:
+CREATE TRIGGER BeforeInsertEmployee
+BEFORE INSERT ON Employees
+FOR EACH ROW
+SET NEW.created_at = NOW();
+
+Output:
+Automatically sets created_at when a new employee is inserted.
+
+
+
+32. CTE (Common Table Expression)
+Definition:
+ A CTE is a temporary named result set defined using WITH that can be referenced in the main query. It improves readability and handles recursive queries.
+Example:
+WITH HighSalary AS (
+  SELECT name, salary 
+  FROM Employees 
+  WHERE salary > 60000
+)
+SELECT * FROM HighSalary;
+
+Output:
+Employees with salary > 60000.
+
+
+
+33. Materialized Views
+Definition:
+ A materialized view is similar to a normal view but stores the result set physically. It can be refreshed to update data and is useful for performance in large datasets.
+Example (PostgreSQL / Oracle):
+CREATE MATERIALIZED VIEW HighSalary AS
+SELECT name, salary 
+FROM Employees
+WHERE salary > 60000;
+
+Output:
+A stored copy of high salary employees, which can be refreshed for updates.
+
+34. Convert Rows → Columns
+Definition:
+ Converting multiple rows into columns is often required for reporting (also called pivoting).
+Example:
+SELECT
+    MAX(CASE WHEN row_number = 1 THEN values1 END) AS value1,
+    MAX(CASE WHEN row_number = 2 THEN values1 END) AS value2
+FROM (
+    SELECT values1,
+           ROW_NUMBER() OVER (ORDER BY values1) AS row_number
+    FROM my_table
+) t;
+
+Output:
+value1
+value2
+12
+54
+
+
+35. Unpivot (Convert Columns → Rows)
+Definition:
+ Unpivot is used to transform columns into multiple rows, useful for restructuring wide tables.
+Example (SQL Server):
+SELECT Category, Year, Sales
+FROM (
+   SELECT Category, [2015], [2016], [2017]
+   FROM dbo.Sales
+) OrigSales
+UNPIVOT (Sales FOR Year IN ([2015],[2016],[2017])) AS Unpvt;
+
+Output:
+Category
+Year
+Sales
+A
+2015
+25
+A
+2016
+40
+A
+2017
+12
+B
+2015
+20
+B
+2016
+34
+B
+2017
+50
+
+
+36. UNION vs UNION ALL
+Definition:
+ Both combine results from multiple queries.
+Feature
+UNION
+UNION ALL
+Duplicates
+Removed
+Kept
+Performance
+Slower (duplicate check)
+Faster (no duplicate check)
+Usage
+Commonly used
+Less commonly used
+
+Example:
+SELECT name FROM Employees
+UNION
+SELECT name FROM Managers;
+
+SELECT name FROM Employees
+UNION ALL
+SELECT name FROM Managers;
+
+
+37. Create Empty Table (like another)
+Definition:
+ You can create a new table with the same structure as an existing table but without data.
+Example:
+CREATE TABLE new_table AS 
+SELECT * FROM existing_table WHERE 1=0;
+
+Output:
+new_table created with the same schema, but no records.
+
+
+
+38. Count Character Occurrences
+Definition:
+ Counts the total number of times a specific character appears in a column.
+Example:
+SELECT SUM(LENGTH(column_value) - LENGTH(REPLACE(column_value, 'n', ''))) 
+AS total_occurrences
+FROM your_table;
+
+Output:
+Suppose column contains ['Neon', 'John'] → result = 3 (two n in Neon + one in John).
+
+
+
+39. SUBSTRING_INDEX (like Python split)
+Definition:
+ Splits a string based on a delimiter and returns a specific part.
+Example:
+SELECT SUBSTRING_INDEX(skills, ',', 1) AS skill_1
+FROM employees;
+
+Output:
+If skills = 'Python,SQL,FastAPI' → skill_1 = Python
+
+
+
+40. ACID Properties
+Definition:
+ ACID ensures reliability of transactions in databases.
+Atomicity → All or nothing execution.
+
+
+Consistency → Integrity constraints must be maintained.
+
+
+Isolation → Each transaction executes independently.
+
+
+Durability → Once committed, data changes are permanent.
+
+
+Example:
+START TRANSACTION;
+UPDATE Accounts SET balance = balance - 500 WHERE id = 1;
+UPDATE Accounts SET balance = balance + 500 WHERE id = 2;
+COMMIT;
+
+Output:
+Transfer is safe, consistent, isolated, and durable.
+
+
+
+41. Normalization
+Definition:
+ Process of organizing data to reduce redundancy and improve consistency.
+Forms:
+1NF: Atomic values only.
+
+
+2NF: No partial dependency.
+
+
+3NF: No transitive dependency.
+
+
+BCNF: Every determinant is a candidate key.
+
+
+4NF: No multi-valued dependency.
+
+
+5NF: Decompose tables to remove redundancy.
+
+
+Example:
+Split Employee and Department into separate tables to avoid repeating department names.
+
+
+
+42. Ranking Functions
+Definition:
+ Ranking functions assign a number to each row based on order.
+ROW_NUMBER() → Sequential numbers (no duplicates).
+
+
+RANK() → Gaps in ranking if duplicates.
+
+
+DENSE_RANK() → No gaps in ranking.
+
+
+Example:
+SELECT name, sales,
+       ROW_NUMBER() OVER (ORDER BY sales DESC) AS row_num,
+       RANK() OVER (ORDER BY sales DESC) AS rank,
+       DENSE_RANK() OVER (ORDER BY sales DESC) AS dense_rank
+FROM Sales;
+
+With partition by 
+SELECT 
+    id,
+    name,
+    dept,
+    salary,
+    ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) AS row_num,
+    RANK() OVER (PARTITION BY dept ORDER BY salary DESC) AS rank_num,
+    DENSE_RANK() OVER (PARTITION BY dept ORDER BY salary DESC) AS dense_rank_num
+FROM employees;
+
+
+Output:
+Person
+Sales
+ROW_NUMBER
+RANK
+DENSE_RANK
+Dave
+700
+1
+1
+1
+Bob
+500
+2
+2
+2
+Eve
+500
+3
+2
+2
+Alice
+300
+4
+4
+3
+Carol
+300
+5
+4
+3
+
+
+43. Limit with starting point :
+For example, to retrieve 5 records starting from the 11th record (offset 10) in the products table:
+SELECT * FROM products LIMIT 10, 5;
+Or
+SELECT * FROM products LIMIT 5 OFFSET 10;
+
+
+44. Write a solution to display the records with three or more rows with consecutive id's, and the number of people is greater than or equal to 100 for each.
+Return the result table ordered by visit_date in ascending order.
+The result format is in the following example.
+ 
+Example 1:
+Input: 
+Stadium table:
+| id   | visit_date | people    |
+| 1    | 2017-01-01 | 10        |
+| 2    | 2017-01-02 | 109       |
+| 3    | 2017-01-03 | 150       |
+| 4    | 2017-01-04 | 99        |
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-09 | 188       |
+Output: 
+| id   | visit_date | people    |
+| 5    | 2017-01-05 | 145       |
+| 6    | 2017-01-06 | 1455      |
+| 7    | 2017-01-07 | 199       |
+| 8    | 2017-01-09 | 188       |
+Explanation: 
+The four rows with ids 5, 6, 7, and 8 have consecutive ids and each of them has >= 100 people attended. Note that row 8 was included even though the visit_date was not the next day after row 7.
+The rows with ids 2 and 3 are not included because we need at least three consecutive ids.
+
+
+Solution:
+with ban as (
+   select id,visit_date, people from stadium where people>=100
+   ) getting all filter record for more then 100
+    ,ban1 as (
+       select id,visit_date, people, id - row_number() over (order by id ) as id2 from ban
+       ) 	
+       ,ban2 as (
+           select id2 from ban1 group by id2 having count(*)>=3
+       )
+
+
+   select id,visit_date, people from ban1  where id2 in (select id2 from ban2)
+
+45. Cross join :
+
+select user_id,event_type,count(event_type) as count1 from app_events where event_type not in ("app_open","app_close") group by user_id, event_type
+| user_id | event_type | count1 |
+| ------- | ---------- | ------ |
+| 201     | scroll     | 6      |
+| 202     | click      | 2      |
+| 202     | scroll     | 2      |
+| 202     | purchase   | 1      |
+| 203     | scroll     | 5      |
+| 203     | click      | 1      |
+| 204     | scroll     | 2      |
+| 204     | click      | 1      |
+
+Cross join query  in other way 
+
+| user_id | scroll_count | click_count | purchase_count |
+| ------- | ------------ | ----------- | -------------- |
+| 201     | 6            | 0           | 0             |
+| 202     | 0            | 2           | 0              |
+| 202     | 2            | 0           | 0              |
+| 202     | 0            | 0           | 1              |
+| 203     | 5            | 0           | 0              |
+| 203     | 0            | 1           | 0              |
+| 204     | 2            | 0           | 0              |
+| 204     | 0            | 1           | 0              |
+
+
+
+45. Alternative approach for cross join :
+
+select user_id,
+   SUM(CASE WHEN event_type = 'scroll' THEN 1 ELSE 0 END) AS scroll_count,
+   SUM(CASE WHEN event_type = 'click' THEN 1 ELSE 0 END) AS click_count,
+   SUM(CASE WHEN event_type = 'purchase' THEN 1 ELSE 0 END) AS purchase_count from app_events where event_type not in ("app_open","app_close") group by user_id, event_type
+
+
+46.   invalid IP addresses
+
+Write a solution to find invalid IP addresses. An IPv4 address is invalid if it meets any of these conditions:
+Contains numbers greater than 255 in any octet
+Has leading zeros in any octet (like 01.02.03.04)
+Has less or more than 4 octets
+Return the result table ordered by invalid_count, ip in descending order respectively. 
+
+
+
+
+Solution :
+
+select ip,count1 as invalid_count from (
+   select ip, count(*) as count1 from logs group by ip
+   )k
+   where
+    (SUBSTRING_INDEX(ip, '.', 1)>255 or SUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 2),'.',-1)>255 or SUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 3),'.',-1)>255 or SUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 4),'.',-1)>255) or
+(LENGTH(ip) - LENGTH(REPLACE(ip, '.', '')) + 1 !=4) or
+( SUBSTRING_INDEX(ip, '.', 1) like '0%' or SUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 2),'.',-1) like '0%'  or SUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 3),'.',-1) like '0%'  or SUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 4),'.',-1) like '0%' ) order by count1 desc, ip desc
+
+
+To get all spit element one by one :
+ 1st value SUBSTRING_INDEX(ip, '.', 1)
+2nd value SUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 2),'.',-1)
+3rd vlaueSUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 3),'.',-1)
+4th value SUBSTRING_INDEX(SUBSTRING_INDEX(ip, '.', 4),'.',-1)
+
+
+
+
+To get number of element of split :
+LENGTH(ip) - LENGTH(REPLACE(ip, '.', '')) + 1
+
+
+
+
+
+
+
+
+47. Offset 
+In SQL, OFFSET is used to skip a certain number of rows before starting to return results.
+ 
+Example:
+SELECT *
+FROM employees
+LIMIT 5 OFFSET 10; 
+Skip first 10 rows, Return next 5 rows
+
+
+Real-Life Use Case (Pagination 🔥)
+Used in APIs / UI pages:
+Page		Query
+Page 1	LIMIT 10 OFFSET 0
+Page 2	LIMIT 10 OFFSET 10
+Page 3	LIMIT 10 OFFSET 20
+
+
+48. Row between for cumulative sum :
+	Row between: Counts a literal number of rows before or after the current row, completely ignoring the values inside those rows.
+SELECT column_name, 
+AGGREGATE_FUNCTION(column_name) OVER ( [PARTITION BY ...] 
+ORDER BY ... 
+ROWS BETWEEN [lower_bound] AND [upper_bound] 
+) FROM table_name;
+Here lower_bound and upper_bound have =5 standard value:
+UNBOUNDED PRECEDINGStarts from the very first row of the partition.
+n PRECEDINGIncludes the \(n\) rows before the current row.
+CURRENT ROWIncludes only the row currently being processed.
+n FOLLOWINGIncludes the \(n\) rows after the current row.
+UNBOUNDED FOLLOWINGEnds at the very last row of the partition. 
+ 
+Calculating a Running Total- To sum values from the beginning of the dataset up to the current row:
+-- Adds current row + all previous rows
+SUM(salary) OVER ( ORDER BY employee_id 
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+) AS running_total 
+Calculating a Moving Average (3-Row Window)- To find the average of the previous row, current row, and next row:
+AVG(daily_sales) OVER ( ORDER BY sale_date ROWS BETWEEN 1 PRECEDING AND 1 FOLLOWING ) AS moving_avg 
+ Calculating a "Total to End"- To sum all values from the current row to the end of the partition: 
+SUM(revenue) OVER ( ORDER BY sale_date ROWS BETWEEN CURRENT ROW AND UNBOUNDED FOLLOWING ) AS future_revenue 
+49. Range between:
+SELECT sale_date, amount, SUM(amount) OVER( ORDER BY sale_date RANGE BETWEEN INTERVAL '6 days' PRECEDING AND CURRENT ROW ) AS rolling_7_day_total FROM sales; 
+Range between:Looks at the value in your ORDER BY column (like dates or currency) and includes all rows that fall within a specific value range, regardless of how many rows that takes.
+
+

@@ -1,0 +1,78 @@
+Difference between aws event bridge and aws step function
+Step function - can follow a series of step one by one based on last step result 
+		and use for main flow only because if any new thing add and it got failed then it will  
+effect main flow like in uber eat it process till payment success method , then 
+loosely service got invoked
+
+  Event bridge -  he have to send a json (EventBridge Notifications) to event bridge bus with some 
+rule  based on that rules it will Trigger some lambda or other pipeline which is  loosely coupled so it any new service got failed it will not effect main flow like in uber eat app loyalti team flow may failed but order will delivered to customer
+
+
+ 
+ If your source file is having 100 million records and only 2000 records are duplicated, how will you remove duplicates?
+Using dropDuplicates([“customer_id”]) - optimal (1 shuffle and 1 scan)
+
+Identify Duplicate Keys First :
+Find duplicate customer_id
+Finance all duplicate records  and non duplicate records
+Use dropduplicate for only duplicate records 
+Join the above step result to non duplicate records using unionByName 
+ 
+Why is this better?
+99,998,000 records remain untouched.
+Only ~2,000 duplicate records undergo expensive deduplication logic.
+Much lower shuffle and faster execution.
+
+ Your job is failing due to OOM (Out of Memory) on the last shuffle step — how will you debug and optimize this issue?
+Check Spark UI
+open the Spark UI and inspect:
+Stages
+Tasks
+Executors
+Storage tab
+SQL/DataFrame execution plan
+ 
+Questions I'd ask:
+Which stage is failing?
+Is one task much larger than others?
+Is data skew present?
+How much shuffle data is being generated?
+Are executors running out of memory or is the driver?
+ 
+Identify the Root Cause:
+Data Skew
+Solution
+Salting
+Repartitioning
+AQE (Adaptive Query Execution) 
+ 
+Large Shuffle Due to Join
+Solution: 
+Broadcast Join 
+ 
+Too Few Partitions
+Solution:
+Increase partitions:
+
+Excessive groupBy or distinct:
+generate heavy shuffles.
+Solution:
+Filter data early:
+before aggregation. 
+
+Executor Memory Issue:
+Check executor logs for errors like: Java heap space
+Solution”:
+increasing memory should be the last option after fixing the query. 
+
+Large Cached Data:
+cached datasets consume executor memory.
+Solution:
+df.unpersist()
+  
+ 
+  
+
+
+
+ 

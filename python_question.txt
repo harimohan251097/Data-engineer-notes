@@ -1,0 +1,1386 @@
+What is Python? What are the benefits of using Python?
+Answer: Python is a high-level, interpreted, general-purpose programming language. Being a general-purpose language, it can be used to build almost any type of application with the right tools/libraries.
+Benefits of using Python:
+Easy to use: Python provides excellent readability and simple syntaxes, making it easy to learn.
+Dynamic Typing: No need to explicitly provide data type information while writing; Data Types are checked during execution.
+Large Module and Package Support: Already written code is easy to use through a vast standard library and third-party packages.
+Interpreted Language: Python is an interpreted language, which executes the code line by line.
+Highly Portable: Python can run on different platforms such as Unix, Macintosh, Linux, and Windows.
+GUI Programming Support: It provides support to develop graphical user interfaces (GUIs).
+User-friendly Data Structures: Has built-in functions that make work easy.
+
+What is PEP 8?
+Answer: PEP stands for Python Enhancement Proposal. A PEP is an official design document providing information to the Python community, or describing a new feature for Python or its processes. PEP 8 specifically is the style guide for writing readable Python code.
+
+What are lists and tuples?
+Answer: Lists and Tuples are both sequence data types that can store a collection of objects in Python.
+Feature
+List
+Tuple
+Syntax
+Use [] (square brackets)
+Use () (parentheses)
+Mutability
+Mutable (can be modified)
+Immutable (once created, their contents cannot be changed)
+Performance
+Slower
+Faster (due to lower overhead and fixed size)
+Inbuilt Functions
+Having many built-in functions/methods
+Fewer built-in methods
+
+
+Export to Sheets
+
+What are the common built-in data types in Python?
+Answer:
+None Type: None
+Numeric Types: int, float, complex, bool
+Sequence: list, tuple, range (sequence used to store a collection of items), string
+Mapping: dictionary
+Set: set (Mutable collection of distinct hashable objects) and frozenset (Immutable collection of distinct hashable objects)
+
+What is pass in Python?
+Answer: The pass keyword represents a null operation in Python. It is generally used for the purpose of filling up empty blocks of code (like in a function definition, loop, or conditional statement) which may execute during runtime but has yet to be written.
+
+What are modules and packages in Python?
+Answer: Python packages and Python modules are two mechanisms that allow for modular programming in Python. Both organize and structure the code but serve different purposes:
+A module is a single file containing Python code (with a .py extension).
+A package is a collection of modules that are organized in a directory hierarchy (the directory typically contains an __init__.py file in older Python versions, though this is optional in Python 3.3+).
+Benefits of Modular Programming:
+Simplicity: Working on a single module helps you focus on a relatively small portion of the problem at hand.
+Maintainability: Modules are designed to enforce logical boundaries between different problem domains.
+Reusability: Functions defined in a module can be easily reused by other parts of the application.
+Scoping: Modules typically define a separate namespace, which helps avoid confusion between identifiers from other parts of the program.
+
+What is the use of self in Python?
+Answer: self is used to represent the instance (object) of the class. With this keyword, you can access the attributes and methods of the class within the class definition. It is the first parameter passed to an instance method.
+
+What is __init__?
+Answer: __init__ is a special constructor method in Python. It is automatically called when a new object/instance of the class is created. It is primarily used to initialize the object's attributes.
+
+What are unit tests in Python?
+Answer: Unit testing means testing different components (or units) of a software program separately. unittest is a built-in unit testing framework of Python that supports this. It is used to validate that each small unit of the software performs as designed.
+
+What is slicing in Python?
+Answer: Slicing is a procedure used to select a particular range of items from sequence types such as Strings, lists, tuples, and so on.
+The syntax is generally: object[start:stop:step].
+
+What is Scope Resolution in Python?
+Answer: Scope resolution is the mechanism used to determine which variable or function is being referred to when there are potential conflicts, such as having the same name defined in different places (e.g., two different modules). In Python, this is often done by explicitly referencing the module name when calling a function or accessing a variable from that module, e.g., module_name.function_name().
+
+What are Python Decorators?
+Answer: Decorators are a design pattern that allows a user to modify or enhance the behavior of a function or class without permanently changing its source code. They are essentially functions that take another function as an argument, add some functionality, and return the modified function.
+A decorator is the outer function that takes a function as an argument, defines a wrapper function to modify it, and returns the wrapper.
+A wrapper is the inner function defined within a decorator that actually performs the added functionality (the code that runs before and/or after the original function call).
+Use Cases: Performing testing, performing caching, checking permissions, logging, or timing function execution.
+Example for Python Decorator:
+Python
+import time
+import math
+
+# decorator function
+def calculate_time(func):
+
+    def inner1(*args, **kwargs): # wrapper function
+
+        # perform operation before function call
+        begin = time.time()
+        print("b",begin)
+
+        func(*args, **kwargs) # call actual function
+
+        # perform operation after function call
+        end = time.time()
+        print("e",end)
+        print("Total time taken in : ", func.__name__, end - begin)
+        return end - begin
+
+    return inner1
+
+@calculate_time # declare decorator for below function
+def factorial(num):
+    print(math.factorial(num))
+
+print(factorial(5)) # calling the function.
+What is Chaining Decorator?
+Chaining decorators is the act of decorating a function with multiple decorators. The decorators are applied from bottom to top (or innermost to outermost).
+Example:
+Python
+@decor1
+@decor2
+def num():
+    return 10
+# This is equivalent to: decor1(decor2(num))
+What is Function Annotations?
+Function annotations are a way to add arbitrary metadata, often for type hints, to the arguments and return values of a function. Since Python supports dynamic typing and does not enforce type checking, annotations are primarily used by external tools (like static analysis tools or IDEs) to help developers.
+Example:
+Python
+def fib(n:'int', output:'list'=[]) -> 'list':
+    # function body
+    pass
+
+def fib(*args:'int', **kwargs:'list'=[]) -> 'list':
+    # function body
+    pass
+
+
+
+What is pickling and unpickling?
+Answer: The pickle module implements binary protocols for serializing and de-serializing Python object structures.
+Pickling (Serialization): The process of converting a Python object into a byte stream format so it can be stored as a file in memory or transmitted across a network.
+Unpickling (De-serialization): The process of converting the byte stream (dumped file) back into its original Python object state.
+
+What are generators, iterators, and iterables in Python?
+Answer:
+Iterable: An object that can be iterated over (e.g., in a for loop). This means it is any Python object capable of returning its members one at a time. Objects are iterable if they implement the __iter__() method. Examples include Lists, tuples, dictionaries, strings, and sets.
+Iterator: An object that represents a stream of data and knows how to produce the next value when requested. An iterator consists of the methods __iter__() (which returns the iterator object itself) and __next__() (which returns the next item from the container). You can traverse through all the values (access each value one by one).
+Python
+mytuple = ("apple", "banana", "cherry")
+myit = iter(mytuple) # `iter()` returns an iterator
+
+print(next(myit)) # Output: apple
+print(next(myit)) # Output: banana
+
+
+Generator: A function that returns an iterable collection of items, one at a time, in a set manner. Generators are a simple and effective way of implementing iterators. They are defined like normal functions but use the yield keyword instead of return to return a generator object. This allows them to produce values on demand and save memory, as they don't store the entire sequence in memory.
+Python
+# example xrange() is an older generator equivalent to range() in Python 3
+# x = xrange(1,10000)
+# print (sys.getsizeof(x)) # output - 40 (small memory usage)
+
+def my_generator():
+    yield 1
+    yield 2
+    yield 3
+
+gen = my_generator()  # Returns a generator object (an iterator)
+print(next(gen))  # Output: 1
+print(next(gen))  # Output: 2
+
+
+
+What is the difference between .py and .pyc files?
+Answer:
+.py files contain the source code of a program, which is written by the developer.
+.pyc files contain the bytecode of your program. This bytecode is generated by the Python interpreter after the compilation of the .py file (source code) and is used to speed up the loading time of subsequent executions.
+
+How many types of inheritance work in Python?
+Answer: Python supports five main types of inheritance:
+Single Inheritance: One parent class is inherited by one child class.
+Multi-level Inheritance: A chain of inheritance, where one parent is inherited by a child, and that child is then used as a parent for another child (Grandparent -> Parent -> Child).
+Multiple Inheritance: More than one parent class is inherited by a single child class.
+Hierarchical Inheritance: One parent class is inherited by more than one child class.
+Hybrid Inheritance: A combination of two or more types of inheritance.
+
+Are access specifiers used in Python?
+Answer: Python does not use access specifiers specifically like private, public, or protected in the same way as languages like Java or C++. Instead, it uses a convention based on prefixes:
+Public: No prefix (accessible from anywhere).
+Protected: Having a single underscore (_) before the variable/method name. This is a convention to indicate that it should not be accessed directly from outside the class or its subclasses, but it is not enforced.
+Private: Having a double underscore (__) before the variable/method name. This triggers name mangling, which makes it harder (but not impossible) to access from outside the class, acting as a form of weak privacy enforcement.
+
+What does *args and **kwargs mean?
+Answer: These are special syntaxes used to pass a variable number of arguments to a function.
+*args: Allows a function to accept any number of positional arguments (non-keyword arguments). These arguments are collected into a tuple inside the function.
+**kwargs: Allows a function to accept a variable length of keyword arguments (arguments passed with a name, e.g., key=value). These arguments are collected into a dictionary inside the function.
+Order of Arguments: When passing mixed arguments, the order must be: positional arguments -> *args -> keyword arguments -> **kwargs.
+Example:
+Python
+def reverse(*args, **kwargs):
+    for i in args:
+        print(i)
+    print("--- Keyword Args ---")
+    for i, j in kwargs.items():
+        print(i, j)
+
+reverse("ABCDE", 1, 5, kl="lk", har="rah", endl=9)
+# Positional args (tuple): ("ABCDE", 1, 5)
+# Keyword args (dict): {'kl': 'lk', 'har': 'rah', 'endl': 9}
+
+
+
+Overloading and Overriding in Python?
+Answer:
+Method Overriding: A concept of Object-Oriented Programming (OOP) that allows a child class to change the implementation of a function that is already defined in its parent class. The method signature (name and number of parameters) must be the same.
+Method Overloading: This typically means having two or more methods in the same class with the same name but different numbers or types of parameters. Python does not support classical method overloading in the same way as C++ or Java. If you define multiple methods with the same name, the last defined method will override the previous ones. You can achieve similar flexibility using default arguments, *args, or **kwargs.
+
+split() and join():
+Answer: These are string methods used for conversion between a string and a list of strings based on some delimiter.
+split(): Used to convert a string into a list of substrings based on a specified delimiter (or whitespace by default).
+Python
+k = 'red blue green'
+print(k.split())   # Output: ['red', 'blue', 'green']
+
+
+join(): Used to convert a list (or other iterable) of strings into a single string, with the string method is called upon used as the separator/glue.
+Python
+wds = ["red", "blue", "green"]
+glue = ';'
+s = glue.join(wds)
+print(s)  # Output: 'red;blue;green'
+
+
+
+What are the global and local variables in Python?
+Answer:
+Global Variables: Variables that are declared outside any function or class. These variables can be accessed or invoked by any function or code block in the entire program.
+Python
+g = "welcome to mindmajix" # Global Variable
+def v() :
+    # The 'global' keyword is needed to modify 'g' inside the function
+    print(g)
+v() # Output: welcome to mindmajix
+
+
+Local Variables: Variables that are declared inside a function or a local scope. These types of variables can be accessed only inside the function/scope where they are defined.
+
+Define slicing in Python?
+Answer: Slicing is a procedure used to select a particular range of items from sequence types such as Strings, lists, tuples, and so on. It creates a new sequence containing the elements from the specified range.
+
+Name some of the built-in modules in Python?
+Answer: Some of the common built-in modules in Python are:
+sys module (System-specific parameters and functions)
+os module (Operating system interfaces)
+random module (Generate pseudo-random numbers)
+collections module (High-performance container datatypes)
+json module (JSON encoder and decoder)
+math module (Mathematical functions)
+datetime module (Classes for manipulating dates and times)
+
+Write a program to count the number of capital letters in a file?
+Answer:
+Python
+with open('SOME_LARGE_FILE.txt', 'r') as countletter:
+    count = 0
+    text = countletter.read()
+    for character in text:
+        if character.isupper():
+            count += 1
+# print(count)
+String Case/Test Functions:
+Function
+Description
+lower()
+Returns a new string where all characters are in lowercase.
+upper()
+Returns a new string where all characters are in uppercase.
+capitalize()
+Returns a new string where only the first character is in the uppercase and the rest are lowercase.
+title()
+Returns a new string where the first character of each word is in the uppercase, and the remaining characters are in the lowercase.
+swapcase()
+Returns a new string with uppercase letters converted to lowercase and vice versa.
+find(sub)
+Returns the lowest index of a given substring sub in the string.
+replace(old, new)
+Returns a string where a specified value (old) is replaced with another specified value (new).
+isdigit()
+Returns True if all characters are digits (0 to 9), otherwise False.
+isalnum()
+Returns True if all characters are alphanumeric (alphabets or digits), otherwise False.
+isalpha()
+Returns True if all characters are alphabets, otherwise False.
+isnumeric()
+Returns True if all characters are numeric (includes digits, fractions, subscripts, etc.), otherwise False.
+islower()
+Returns True if all cased characters are lowercase, otherwise False.
+isupper()
+Returns True if all cased characters are uppercase, otherwise False.
+istitle()
+Returns True if the string is title cased and not empty, otherwise False.
+
+
+Export to Sheets
+
+Write a program in Python to produce a Star triangle?
+Answer:
+Python
+def pyfun(r):
+    for x in range(r):
+        # Print spaces first, then stars
+        print(' ' * (r - x - 1) + '*' * (2 * x + 1))
+
+pyfun(9)
+"""Output:
+
+        *
+       ***
+      *****
+     *******
+    *********
+   ***********
+  *************
+ ***************
+*****************
+"""
+
+
+
+Write a program to check whether the given number is prime or not?
+Answer:
+Python
+# program to check the number is prime or not
+n1 = 409
+# num1 = int(input("Enter any one number: "))
+
+# prime number is greater than 1
+if n1 > 1:
+    # check the following factors up to the number itself
+    for x in range(2, n1): # Corrected loop syntax
+        if (n1 % x) == 0:
+            print(n1, "is not a prime number")
+            break
+    else:
+        print(n1, "is a prime number")
+# if input number is smaller than or equal to the value 1, then it is not prime number
+else:
+    print(n1, "is not a prime number")
+
+"""Output:
+    409 is a prime number"""
+
+
+
+What is Django? List the features of Django?
+Answer:
+Django is an advanced Python web framework that supports agile development and clean, pragmatic design. It is built by experienced developers and takes care of much of the trouble of web development, allowing you to concentrate on writing your application without needing to reinvent the wheel.
+Features of Django:
+Excellent documentation
+Python web framework
+SEO optimized
+High scalability
+Versatile in nature (can be used for various web projects)
+Offers high security (many built-in protections)
+Thoroughly tested
+Provides rapid Development (due to its "batteries-included" philosophy)
+
+List the common security issues that can be avoided by using Django?
+Answer: A few common security issues that can be avoided by using Django are:
+Clickjacking
+Cross-site scripting (XSS)
+SQL injection
+Cross-Site Request Forgery (CSRF)
+
+What are the database connections in Python Flask, explain?
+Answer:
+Flask supports database-powered applications, but it does not include a built-in database layer. The relational database systems often need a schema, which might require piping a schema.sql file into a command-line utility like sqlite3.
+Flask provides mechanisms to manage database connections throughout the request lifecycle, which are typically used with a database library (like SQLAlchemy or a raw driver):
+before_request(): This function is called before the request is processed. It's often used to establish a database connection and store it on the global g object.
+after_request(): This function is called after the request is processed and sends a response to the client. It can be used for actions like modifying the response, but it's generally not where you close the DB connection if an exception can occur.
+teardown_request(): This function is called after the request has been dispatched, regardless of whether an exception was raised or not. It is the ideal place to close the database connection and handle cleanup activities, ensuring resources are freed even if an error occurs.
+
+Explain the procedure to minimize or lower the outages of the Memcached server in your Python development?
+Answer: To minimize Memcached server outages and their impact on a Python application, several strategies can be employed:
+Avoid Cache Stampedes (Dog-piling): When a single instance fails, the database can be hit with a large load as multiple clients try to reload the missing data simultaneously (a "cache stampede").
+Implement a mechanism (e.g., using locks or a probabilistic cache update approach) to ensure that only one request attempts to refresh the expired/missing key from the database, while others wait or serve slightly stale data.
+Use Consistent Hashing/Failover:
+Employ a Memcached client library that supports consistent hashing (like Pylibmc or the python-memcached client) or client-side failover. This distributes keys more evenly and minimizes the number of cache misses when an instance goes down, as the client can map the keys to a different available server.
+Bring up a new instance of Memcached on a new machine using the IP address of the lost machine, allowing the application to reconnect quickly.
+Code Flexibility:
+Write code that allows you to modify the Memcached server list with minimal work (e.g., loading the server list from a configuration file or environment variables) so that failed servers can be quickly removed or replaced.
+Set Timeouts:
+By setting a reasonable timeout value in your Memcached client, you prevent clients from indefinitely sending requests to a degraded server, which could block threads and hurt overall application performance. If a server is too slow, the client will time out and proceed to the next step (e.g., hit the database) quickly.
+
+What are the OOP's concepts available in Python?
+Answer: Python is an object-oriented programming language and supports the following OOP concepts:
+Object
+Class
+Method
+Encapsulation
+Abstraction
+Inheritance
+Polymorphism
+
+What is data abstraction in Python?
+Answer:
+Abstraction is the concept of hiding unnecessary implementation details and showing only the necessary functionality to the user. In simpler terms, it focuses on what an object does rather than how it does it. In Python, abstraction can be achieved using Abstract Base Classes (ABCs) from the abc module and is also related to encapsulation (hiding internal state).
+
+Does Python make use of access specifiers?
+Answer: (See Question 17 - providing a more concise answer here)
+Python does not use access specifiers like private, public, or protected in the strict sense. It relies on a convention for indicating intent:
+Protected: Single underscore prefix (_variable).
+Private: Double underscore prefix (__variable), which invokes name mangling for weak enforcement.
+
+Define Constructor in Python?
+Answer: A constructor is a special type of method in a class (in Python, it's the __init__ method). Its primary purpose is to initialize the state of a newly created object/instance of the class. It is automatically called immediately after the object is created. It can also be used to verify that sufficient resources are available for the object to perform its tasks.
+There are two conceptual types of constructors:
+Non-parameterized constructor: Takes only self as an argument (no other initialization parameters).
+Parameterized constructor: Takes self plus other arguments to initialize the object with specific values.
+
+Define encapsulation in Python?
+Answer: Encapsulation is an OOP concept where data (attributes) and the methods (code) that operate on that data are bound or wrapped together into a single unit (the class). Its main goal is to restrict direct access to the internal state of an object and prevent accidental modification, enforcing that interaction happens only through defined methods. Python achieves this mainly through methods and the convention of using underscores (see Question 17).
+
+What is polymorphism in Python?
+Answer: Polymorphism (meaning "many forms") is an OOP concept that allows an entity (like a function, method, or operator) to take on multiple forms or to be applied to different types of objects in different ways.
+Method Polymorphism: A single method name can be implemented differently in different classes (e.g., the area() method in a Square class and a Circle class).
+Operator Overloading: A single operator (e.g., +) can behave differently based on the operands (e.g., adding numbers vs. concatenating strings/lists).
+
+What types of sort function in list Python?
+Answer: Python provides two main ways to sort sequences:
+list.sort(): This is a method of the list object itself. It sorts the list in place (modifies the original list) and returns None.
+sorted(iterable): This is a built-in function that takes an iterable (like a list, tuple, or string) and returns a new sorted list. It leaves the original iterable unchanged.
+Both support optional arguments:
+reverse=True: To sort in descending order.
+key=function: A function that transforms each element before comparison. The function takes one value and returns a single "proxy" value which is used for the comparisons within the sort.
+Example using key:
+Python
+# Sorting a list of strings ignoring case
+sorted(['string', 'is', 'More', 'Easy'], key=str.lower)
+# Output: ['Easy', 'is', 'More', 'string']
+
+# Sorting a list of tuples based on the first element (index 0)
+student = [('hari', 'A', 12), ('mohan', 'K', 3), ('meena', 'c', 9)]
+print(sorted(student, key=lambda student: student[0]))
+# Output: [('hari', 'A', 12), ('meena', 'c', 9), ('mohan', 'K', 3)]
+
+
+
+What is isinstance() function in Python?
+Answer: The isinstance(object, classinfo) function is a built-in Python function that returns a boolean (True or False) indicating whether an object is an instance of a given classinfo (which can be a class or a tuple of classes).
+isinstance([1, 2, 3], list) returns True
+
+What is math.ceil(), math.floor(), and other functions in math?
+Answer: The math module provides various mathematical functions.
+Python
+import math
+
+# Rounding Functions
+print(math.ceil(10.3))    # Output: 11 (Rounds up to the next largest integer)
+print(math.floor(10.9))   # Output: 10 (Rounds down to the previous largest integer)
+
+# Other Functions
+print(math.factorial(3))  # Output: 6 (Calculates factorial)
+print(math.sqrt(64))      # Output: 8.0 (Calculates square root)
+print(math.gcd(8, 52))    # Output: 4 (Calculates Greatest Common Divisor)
+
+
+
+What is random module?
+Answer: The random module is used to generate pseudo-random numbers and make random selections.
+Python
+import random
+
+# Generate a random float x in the range 0.0 <= x < 1.0
+print(random.random())
+
+# Generate a random integer N such that 0 <= N < n
+print(random.randrange(2)) # Output: 0 or 1
+
+# Generate a random integer N such that start <= N < stop
+print(random.randrange(1, 7)) # Output: any integer from 1 to 6
+
+# Return a k length list of unique elements chosen from the population sequence
+print(random.sample(range(100), 5))
+
+# Return a randomly chosen element from a non-empty sequence
+my_list = [10, 20, 30]
+print(random.choice(my_list))
+
+# Shuffle the sequence x in place (modifies the original list)
+# print(random.shuffle(my_list))
+
+
+
+What is statistics module?
+Answer: The statistics module provides functions for calculating mathematical statistics of numerical data.
+Python
+import statistics
+my_list = [1, 2, 2, 3, 4, 5]
+
+print(statistics.mean(my_list))    # Calculates the average of all elements.
+print(statistics.mode(my_list))    # Calculates the most frequent element.
+print(statistics.median(my_list))  # Calculates the middle element of the sorted list.
+print(statistics.variance(my_list)) # Calculates the variance.
+print(statistics.stdev(my_list))   # Calculates the standard deviation (square root of variance).
+
+
+
+Mode of file open in python file handling?
+Answer: The main modes for opening files are:
+Mode
+Description
+r
+Read - Default. Opens a file for reading. Error if the file does not exist.
+w
+Write - Opens a file for writing. Creates the file if it does not exist, or overwrites the contents if it does.
+a
+Append - Opens a file for writing. Creates the file if it does not exist, or appends to the end of the file if it does.
+r+
+Read and Write - Opens a file for both reading and writing.
+w+
+Write and Read - Opens a file for writing and reading. Overwrites existing file or creates new.
+
+
+Export to Sheets
+Basic File Operations:
+Python
+# 1. Open, Write, and Close
+# file = open("name_with_path.txt", 'w')
+# file.write("any data you want to write ") # Overwrites existing data
+# file.close() # Must close any open file
+
+# 2. Read All Data
+# with open('filename.txt', 'r') as file:
+#     data = file.read()
+
+# 3. Read Line by Line (Iteration) - Best for large files
+# with open('filename.txt', 'r') as file:
+#     for line in file:
+#         print(line, end='')
+
+# 4. Read All Lines into a List
+# with open('filename.txt', 'r') as file:
+#     lines = file.readlines()
+#     for line in lines:
+#         print(line, end='')
+
+# 5. Read One Line at a Time
+# with open('filename.txt', 'r') as file:
+#     line = file.readline()  # Read the first line
+#     while line:  # Continue until no more lines are found
+#         print(line, end='')
+#         line = file.readline()  # Read the next line
+
+# Seek in File Handling
+# The 'seek()' method is used to change the file handle's position (the pointer).
+# file.seek(0) # Sets the pointer back to the beginning of the file.
+# file.seek(N) # Skips N number of characters from the beginning.
+
+
+
+What is zip module in Python?
+Answer: The question likely refers to the zipfile module, which is used to work with ZIP archives.
+Python
+import zipfile
+# To use:
+# zip_file = zipfile.ZipFile('archive.zip', 'r') # Open zip
+
+# Common Methods:
+# zip_file.namelist()   # Prints all file names inside the zip archive.
+# zip_file.infolist()   # Gets all metadata (permissions, size, etc.) about inside files.
+# zip_file.getinfo('filename') # Gets metadata for a single file.
+# zip_file.read('filename')  # Reads content of a single file inside the zip.
+# zip_file.extract('filename') # Extracts a particular file.
+# zip_file.extractall() # Extracts all files in the zip to a directory.
+
+
+
+What is datetime module in Python?
+Answer: The datetime module supplies classes for manipulating dates and times.
+Python
+import datetime
+
+# Get the current date and time
+a = datetime.datetime.now()
+# a = datetime.datetime(2025, 10, 9, 9, 22, 57) # Example output format
+
+print(a.date())    # Get only the date part
+print(a.month)     # Get the month
+print(a.year)      # Get the year
+print(a.hour)      # Get the hour
+print(a.minute)    # Get the minute
+print(a.second)    # Get the second
+print(a.time())    # Get only the time part
+
+# Using timedelta to add/subtract time
+from datetime import timedelta
+print(a + timedelta(days=2))    # Get date 2 days from today
+print(a + timedelta(weeks=3))   # Get date 3 weeks from today
+
+
+
+Occurrences of element:
+Answer: A Python program to count the occurrences of each element in a list:
+Python
+input_list = ['a', 'a', 'a', 'b', 'b', 'b', 'b', 'c', 'c', 'c', 'c', 'c']
+occurrences = {}
+for item in input_list:
+    if item in occurrences:
+        occurrences[item] += 1
+    else:
+        occurrences[item] = 1
+print(occurrences) # Output: {'a': 3, 'b': 4, 'c': 5}
+
+
+
+Program to return group of elements from list if their sum = 10
+Answer: A program using a recursive backtracking approach to find all unique combinations of elements in a list that sum up to a target value.
+Python
+def find_sum_groups(nums, target_sum):
+    result = []
+    current_group = []
+    # Sort the list to handle duplicates and speed up: nums.sort()
+
+    def backtrack(start_index, current_sum):
+        if current_sum == target_sum:
+            # Found a group, append a copy
+            result.append(current_group[:])
+            return
+        elif current_sum > target_sum:
+            return
+
+        for i in range(start_index, len(nums)):
+            current_num = nums[i]
+            current_group.append(current_num)
+            # Recursive call: start from the next index (i + 1) to avoid re-using elements
+            backtrack(i + 1, current_sum + current_num)
+            current_group.pop() # Backtrack: remove the last element
+
+    backtrack(0, 0)
+    return result
+
+a = [2, 4, 6, 8, 9, 1, 4, 5, 2, 5]
+target_sum = 10
+
+groups = find_sum_groups(a, target_sum)
+print(groups)
+# Output: [[2, 8], [4, 6], [8, 1, 1], [1, 4, 5], [4, 5, 1], [5, 2, 3], [2, 4, 4], [2, 8], [4, 6], [6, 4], [8, 1, 1], [9, 1], [1, 4, 5], [4, 5, 1], [5, 2, 3], [2, 4, 4]]
+# Note: The provided output [[2, 8], [4, 6], [1, 9], [4, 2, 4], [5, 5]] is based on a slightly different implementation or an assumption of unique indices/elements. The general backtracking solution provided above finds combinations.
+
+
+
+Python program to find the number of times that the substring occurs in the given string including overlapping condition.
+Answer:
+Python
+def count_overlapping_substring_occurrences(main_string, substring):
+    count = 0
+    start_index = 0
+
+    while True:
+        # Find the next occurrence, starting the search from start_index
+        start_index = main_string.find(substring, start_index)
+        # print(start_index) # Optional: print the index found
+
+        if start_index == -1:
+            break  # No more occurrences found
+        count += 1
+        # Move to the next character (start_index + 1) for potential overlapping occurrences
+        start_index += 1
+    return count
+
+main_string = "ABCDCDC"
+substring = "CDC"
+print(count_overlapping_substring_occurrences(main_string, substring)) # Output: 2
+
+
+
+Python program to convert decimal to binary number?
+Answer:
+Python
+def DecimalToBinary(num):
+    if num >= 1:
+        # Recursive call: integer division by 2
+        DecimalToBinary(num // 2)
+    # Print the remainder (the binary digit)
+    # 'end = ''' prevents a newline for each print
+    print(num % 2, end = '')
+
+# Example: 703 decimal
+DecimalToBinary(703) # Output: 1010111111 (No newline at end)
+print() # To add a newline after the result
+
+
+
+This function prints the longest palindrome subString
+Answer: A program using a brute-force approach to find the longest palindrome substring.
+Python
+# Helper function to print a substring from index low to high (inclusive)
+def printSubStr(s, low, high):
+    print(s[low: high + 1], end="")
+
+def longestPalSubstr(string):
+    n = len(string)
+
+    # All subStrings of length 1 are palindromes
+    maxLength = 1
+    start = 0
+
+    # Nested loop to mark start (i) and end (j) index of the substring
+    for i in range(n):
+        for j in range(i, n):
+            flag = 1 # Assume it is a palindrome
+
+            # Check for palindrome from both ends inwards
+            # k runs from 0 up to the midpoint
+            for k in range(0, ((j - i) // 2) + 1):
+                if (string[i + k] != string[j - k]):
+                    flag = 0 # Not a palindrome
+                    break
+
+            # If it is a palindrome and longer than the current max
+            if (flag != 0 and (j - i + 1) > maxLength):
+                start = i
+                maxLength = j - i + 1
+
+    print("Longest palindrome substring is: ", end="")
+    printSubStr(string, start, start + maxLength - 1)
+
+    return maxLength
+
+str_test = "forgeeksskeegfor"
+print("\nLength is:", longestPalSubstr(str_test))
+# Output: Longest palindrome substring is: geeksskeeg
+# Length is: 10
+
+
+
+ASCII CODE for string:
+Answer:
+Uppercase Letters (A-Z): 65−90
+Lowercase Letters (a-z): 97−122
+Digits (0-9): 48−57
+Built-in Functions:
+ord(string_character): Converts a single character string into its ASCII/Unicode integer value.
+chr(number): Converts an integer (ASCII/Unicode number) into its corresponding single character string.
+
+How is memory managed in Python?
+Answer: Memory management in Python is handled by the Python Memory Manager. The memory is allocated in the form of a private heap space dedicated to Python objects. The manager handles this private space, and the developer does not need to worry about it. It uses a combination of reference counting and a garbage collector to automatically reclaim memory from objects that are no longer being used.
+
+What are Python namespaces?
+Answer: A namespace in Python is a system to manage names (identifiers like variable or function names) to ensure they are unique and can be used without any conflict. It is essentially a mapping from names to objects. Examples include built-in names, global names (in a module), and local names (in a function).
+
+What are Dict and List comprehensions?
+Answer: Comprehensions are a concise, powerful, and readable way to create sequences (like lists, dictionaries, or sets) based on existing iterables. They significantly reduce the amount of verbose code.
+List Comprehension: A syntax construction to ease the creation of a list based on an existing iterable.
+Python
+values = [1, 2, 3, 4, 5]
+squared = [x**2 for x in values]
+# Output: [1, 4, 9, 16, 25]
+
+
+Dict Comprehension: A syntax construction to ease the creation of a dictionary based on an existing iterable.
+Python
+keys = ['a','b','c','d','e']
+values = [1,2,3,4,5]
+# Combining two lists into a dict
+myDict = { k:v for (k,v) in zip(keys, values)}
+# Output: {'a': 1, 'b': 2, 'c': 3, 'd': 4, 'e': 5}
+
+# Dict from a single iterable with transformation
+myDict = {x: x**2 for x in [1,2,3,4,5]}
+# Output: {1: 1, 2: 4, 3: 9, 4: 16, 5: 25}
+
+# With a conditional filter
+newdict = {x: x**3 for x in range(10) if x**3 % 4 == 0}
+
+
+
+What is lambda in Python?
+Answer: A lambda function is a small anonymous function in Python.
+It can accept any number of arguments, but can only have a single expression.
+The result of the expression is what the function returns.
+It is generally used in situations requiring a small function for a short time period, often as an argument to higher-order functions like sorted(), map(), or filter().
+Example:
+Python
+student=[('hari','A',12),('mohan','K',3),('meena','c',9)]
+# Lambda used as the 'key' function for sorting based on the first element (name)
+print(sorted(student, key=lambda student: student[0]))
+# Output: [('hari', 'A', 12), ('meena', 'c', 9), ('mohan', 'K', 3)]
+
+
+
+How do you copy an object in Python?
+Answer: In Python, the assignment statement (= operator) only creates a binding (another reference) to the existing object, it does not create a copy. To create copies of an object, you need to use the copy module.
+Shallow Copy: Use copy.copy(). It creates a new object but inserts references to the original object's contents.
+Deep Copy: Use copy.deepcopy(). It creates a new object and recursively inserts copies of the original object's contents.
+
+What is the difference between xrange and range in Python?
+Answer:
+range() (in Python 3 and modern use): Returns a range object (an immutable sequence type). This object generates the numbers on demand, making it memory efficient, similar to xrange in Python 2.
+range() (in Python 2): Returns a Python list containing all the integers in the sequence. It is less memory-efficient for very large ranges.
+xrange() (in Python 2): Returns an xrange object (a generator/iterator) that generates numbers only as needed. It was memory efficient for very large ranges. xrange is not available in Python 3.
+
+How is an empty class created in Python?
+Answer: An empty class, which does not have any members (attributes or methods) defined in it, is created by using the pass keyword in the class body.
+Python
+class EmptyClass:
+    pass
+
+
+
+Why is finalize used?
+Answer: The term "Finalize" (or a __del__ method in Python) generally refers to a method used for freeing up unmanaged resources and performing cleanup activities before the garbage collection method is invoked to destroy an object. It helps in performing memory management tasks, though Python's garbage collector usually handles most memory needs automatically.
+
+What is the difference between / and // in Python?
+Answer:
+/ (Single Slash): Represents precise division (or float division). It always returns a float result, even if the division is exact.
+Python
+5 / 2 = 2.5
+
+
+// (Double Slash): Represents floor division (or integer division). It returns the largest integer less than or equal to the mathematical result of the division.
+Python
+5 // 2 = 2
+
+
+
+How is Exceptional handling done in Python?
+Answer: Exceptional handling in Python is primarily done using the try, except, and finally keywords:
+try: The block of code that is monitored for errors/exceptions. If an exception occurs, the rest of the try block is skipped.
+except: This block gets executed when an exception occurs in the try block. It specifies the type of exception it can handle (e.g., except ZeroDivisionError:).
+finally: This block's code gets executed irrespective of whether an error occurred or not. It is typically used to do required cleanup activities of objects or variables (like closing a file).
+
+What is swapcase function in Python?
+Answer: swapcase() is a string method that returns a copy of the string where all uppercase characters are converted into lowercase and all lowercase characters are converted into uppercase.
+Python
+"HeLlO wOrLd".swapcase() # Output: 'hElLo WoRlD'
+
+
+
+What are Iterators in Python?
+Answer: (See Question 14)
+An Iterator is an object that represents a stream of data and knows how to produce the next value when requested. It implements the __iter__() and the __next__() methods.
+
+What are unit tests in Python?
+Answer: (See Question 9)
+Unit Testing is the first level of software testing where the smallest testable parts (units) of the software are tested. The built-in unittest framework is used to validate that each unit performs as designed.
+
+Exception & Error Handling in Python:
+Answer:
+Error: An issue in a program that prevents the program from completing its task and is typically unrecoverable (e.g., a SyntaxError caused by incorrect code structure).
+Exception: A condition that interrupts the normal flow of the program during execution (a runtime error). Exceptions are recoverable and can be handled using try/except blocks (e.g., ZeroDivisionError, TypeError).
+
+What is Python Switch Statement
+Answer: Python introduced a feature called "structural pattern matching" in version 3.10, which acts as a robust equivalent to the switch statement found in other languages.
+It is implemented with the match and case keywords:
+Python
+match term:
+   case pattern-1:
+      action-1
+   case pattern-2:
+      action-2
+   # The underscore symbol is used to define a default case
+   case _:
+      action-default
+
+
+
+What is Walrus Operator?
+Answer: The Walrus Operator (:=) is a feature introduced in Python 3.8 that allows you to assign a value to a variable within an expression. This can be useful for reducing verbosity and avoiding repetitive calculations, especially within loops or conditional statements.
+Example:
+Python
+names = ["Jacob", "Joe", "Jim"]
+
+# Assigns the input to 'name' and then checks if 'name' is in the list
+if (name := input("Enter a name: ")) in names:
+    print(f"Hello, {name}!")
+else:
+    print("Name not found.")
+
+
+
+Difference between Shallow copy and Deep copy
+Answer:
+S.No.
+Shallow Copy (copy.copy())
+Deep Copy (copy.deepcopy())
+1.
+Stores a copy of the original object but only copies references to the nested/mutable objects.
+Stores a copy of the original object and recursively stores copies of all nested/mutable objects.
+2.
+Faster than Deep copy.
+Slower than Shallow copy.
+3.
+Changes made in the copied object's nested mutable contents reflect in the original object.
+Changes made in the copied object do not reflect on the original object at any level.
+4.
+Stores references of nested objects in the main memory.
+Stores copies of the object values (recursively) in the main memory.
+
+
+Export to Sheets
+
+Rest API methods:
+Answer: REST (Representational State Transfer) APIs use standard HTTP methods to perform operations (CRUD - Create, Read, Update, Delete) on resources.
+Method
+Summary
+CRUD
+Accepts Request Body
+Idempotent
+Safe
+GET
+To fetch a single resource or group of resources
+Read
+No
+Yes
+Yes
+POST
+To create a new resource
+Create
+Yes
+No
+No
+PUT
+To update an entire resource (replaces the resource)
+Update
+Yes
+Yes
+No
+PATCH
+To partially update a resource (modifies specified fields)
+Update
+Yes
+No
+No
+DELETE
+To delete a resource
+Delete
+No
+Yes
+No
+OPTIONS
+To get information on permitted operations for a URL
+Read
+No
+Yes
+Yes
+HEAD
+To get metadata of the endpoint (like GET, but without the body)
+Read
+No
+Yes
+Yes
+TRACE
+For diagnosing purposes (echoes the request)
+Read
+No
+Yes
+Yes
+CONNECT
+To make a two-way connection (tunnel) between client and resource
+-
+No
+No
+No
+
+
+Export to Sheets
+Idempotent: Making the same call multiple times will result in the same state (e.g., DELETEing a resource multiple times is idempotent).
+Safe: The method does not alter the state of the server (e.g., GET is safe).
+
+What is SQLAlchemy?
+Answer: SQLAlchemy is a well-known Python SQL toolkit and Object-Relational Mapper (ORM).
+It provides developers with the flexibility of using the SQL database by allowing them to work with Python objects and classes rather than writing separate, raw SQL queries.
+It abstracts the database layer, making applications more portable across different SQL databases (PostgreSQL, MySQL, SQLite, etc.).
+Example of ORM vs. Raw SQL (Conceptual):
+Python
+import sqlalchemy as db
+# engine = db.create_engine('dialect+driver://user:pass@host:port/db') # Connection
+
+# SQL: SELECT * FROM films WHERE certification = 'PG'
+# SQLAlchemy: db.select([films]).where(films.columns.certification == 'PG')
+
+# SQL: SELECT * FROM files WHERE certification = 'R' and release_year > 2003
+# SQLAlchemy: db.select([films]).where(
+#               db.and_(films.columns.certification == 'R',
+#                       films.columns.release_year > 2003)
+#             )
+
+
+
+Linked List implementation using Python:
+Answer: A complete implementation of a Singly Linked List in Python demonstrating common operations:
+Python
+# Node class definition
+class Node:
+    def __init__(self, data):
+        self.data = data
+        self.next = None
+
+# LinkedList class definition
+class LinkedList:
+    def __init__(self):
+        self.head = None
+
+    # Method to add a node at the beginning of LL
+    def insertAtBegin(self, data):
+        new_node = Node(data)
+        new_node.next = self.head
+        self.head = new_node
+
+    # Method to add a node at any index
+    def insertAtIndex(self, data, index):
+        if index == 0:
+            self.insertAtBegin(data)
+            return
+
+        current_node = self.head
+        position = 0
+        while current_node is not None and position < index - 1:
+            current_node = current_node.next
+            position += 1
+
+        if current_node is not None:
+            new_node = Node(data)
+            new_node.next = current_node.next
+            current_node.next = new_node
+        else:
+            print("Index not present")
+
+    # Method to add a node at the end of LL
+    def insertAtEnd(self, data):
+        new_node = Node(data)
+        if self.head is None:
+            self.head = new_node
+            return
+
+        current_node = self.head
+        while current_node.next:
+            current_node = current_node.next
+        current_node.next = new_node
+
+    # Update node of a linked list at a given position
+    def updateNode(self, val, index):
+        current_node = self.head
+        position = 0
+        while current_node is not None and position != index:
+            current_node = current_node.next
+            position += 1
+
+        if current_node is not None:
+            current_node.data = val
+        else:
+            print("Index not present")
+
+    # Method to remove first node
+    def remove_first_node(self):
+        if self.head is not None:
+            self.head = self.head.next
+
+    # Method to remove last node
+    def remove_last_node(self):
+        if self.head is None or self.head.next is None:
+            self.head = None
+            return
+
+        current_node = self.head
+        while current_node.next.next is not None:
+            current_node = current_node.next
+        current_node.next = None
+
+    # Method to remove node at a given index
+    def remove_at_index(self, index):
+        if self.head is None:
+            return
+        if index == 0:
+            self.remove_first_node()
+            return
+
+        current_node = self.head
+        position = 0
+        while current_node is not None and position < index - 1:
+            current_node = current_node.next
+            position += 1
+
+        if current_node is not None and current_node.next is not None:
+            current_node.next = current_node.next.next
+        else:
+            print("Index not present")
+
+    # Method to remove a node by data value
+    def remove_node(self, data):
+        current_node = self.head
+
+        if current_node is not None and current_node.data == data:
+            self.remove_first_node()
+            return
+
+        prev = None
+        while current_node is not None and current_node.data != data:
+            prev = current_node
+            current_node = current_node.next
+
+        if current_node is None:
+            return # Data not found
+        else:
+            prev.next = current_node.next
+
+    # Print the size of linked list
+    def sizeOfLL(self):
+        size = 0
+        current_node = self.head
+        while current_node:
+            size += 1
+            current_node = current_node.next
+        return size
+
+    # Print method for the linked list
+    def printLL(self):
+        current_node = self.head
+        while current_node:
+            print(current_node.data)
+            current_node = current_node.next
+
+# create a new linked list
+llist = LinkedList()
+
+# add nodes to the linked list
+llist.insertAtEnd('a')
+llist.insertAtEnd('b')
+llist.insertAtBegin('c')
+llist.insertAtEnd('d')
+llist.insertAtIndex('g', 2)
+
+# print the linked list
+print("Node Data")
+llist.printLL()
+# c g a b d
+
+# remove a nodes from the linked list
+print("\nRemove First Node")
+llist.remove_first_node() # Removes 'c'
+print("Remove Last Node")
+llist.remove_last_node() # Removes 'd'
+print("Remove Node at Index 1")
+llist.remove_at_index(1) # Removes 'a'
+
+# print the linked list again
+print("\nLinked list after removing a node:")
+llist.printLL() # g b
+
+print("\nUpdate node Value")
+llist.updateNode('z', 0) # Updates 'g' to 'z'
+llist.printLL() # z b
+
+print("\nSize of linked list :", end=" ")
+print(llist.sizeOfLL()) # 2
+
+
+
+Difference between Multithreading and Multiprocessing:
+Answer:
+Feature
+Multithreading (Uses threading module)
+Multiprocessing (Uses multiprocessing module)
+Mechanism
+Runs multiple threads within the same process.
+Runs multiple processes, each with its own interpreter and memory.
+Memory
+Shares the same memory space and resources.
+Has independent memory spaces and resources (no shared memory).
+Concurrency
+Achieves concurrency (interleaving tasks) but not true parallelism for CPU-bound tasks (due to GIL).
+Achieves true parallelism on multi-core systems.
+Suitability
+Best for I/O-bound tasks (where threads spend time waiting for I/O, releasing the GIL).
+Best for CPU-bound tasks (heavy computation that can utilize multiple cores).
+GIL Impact
+Limited by the Global Interpreter Lock (GIL), allowing only one thread to execute Python bytecode at a time.
+Not affected by the GIL, as each process has its own interpreter.
+Example
+Web server handling multiple simultaneous network requests.
+Large-scale data analysis or image processing.
+
+
+Export to Sheets
+
+Python Global Interpreter Lock (GIL)?
+Answer: The Python Global Interpreter Lock (GIL) is a mutex (a lock) that allows only one thread to execute Python bytecode at a time, even on multi-core processor systems.
+Purpose: The GIL is used to protect access to Python objects, preventing multiple threads from simultaneously modifying shared data structures, which simplifies memory management and prevents race conditions.
+Effect: It effectively prevents true parallelism for CPU-bound tasks in standard CPython (the default implementation).
+Release: The GIL is released during I/O operations (like file reading, network communication, or system calls) so that other threads can run while one is waiting, making multithreading still useful for I/O-bound tasks.
+73 Time complexity:
+
+1️⃣ Identify the variable input (n)
+Example: arr = [1,2,3,..., n]
+Here input size = n
+
+2️⃣ Count operations inside loops or repeated code
+Case 1: Single loop
+for i in range(n):
+    print(i)
+This loop runs n times → O(n).
+
+Case 2: Two loops one after another
+for i in range(n):
+    print(i)
+
+for j in range(n):
+    print(j)
+Total operations = n + n = 2n → O(n)
+ (We drop constants)
+
+Case 3: Nested loops
+for i in range(n):
+    for j in range(n):
+        print(i, j)
+Runs n × n = n² → O(n²)
+
+Case 4: List + Dictionary + Variables
+You asked: list of size n, dictionary of size m, and 2 variables
+Searching in list
+x in my_list
+→ O(n)
+
+Searching in dict
+x in my_dict
+→ O(1) average
+
+Accessing simple variable
+a = 10
+→ O(1)
+
+Total complexity
+If code uses all:
+list operation  → O(n)
+dict operation  → O(1)
+2 variables     → O(1)
+
+Total = O(n + 1 + 1) = O(n)
+
+
+
+74 Space complexity:
+General Steps to Calculate Space Complexity Look for:
+Number of variables → O(1)
+
+
+Growth of lists/dicts/sets → O(n)
+
+
+Nested data structures → O(n²), O(n³), etc.
+
+
+Recursion depth → O(n)
+
+
+Temporary data structures → include them too
+
+Example:
+✅ Space used:
+1️⃣ List of size n
+➡ Takes O(n) space
+2️⃣ Dictionary of size m
+➡ Takes O(m) space
+3️⃣ Two simple variables
+➡ Each takes O(1)
+ Total → O(1)
+
+🔍 Total Space Complexity
+Add everything:
+O(n) + O(m) + O(1)
+
+In Big-O, constants are ignored:
+➡ Final Space Complexity = O(n + m)
+
+75 Problem solving type:
+
+✅ 1. Brute Force
+
+Try all possible combinations or solutions.
+
+Simple to write but usually slow.
+
+Used to understand the problem before optimizing.
+
+Example: Checking all subarrays to find max sum.
+
+✅ 2. Greedy Algorithm
+
+Make the best possible choice at each step.
+
+Works when local optimum leads to global optimum.
+
+Examples:
+
+Activity selection
+
+Huffman coding
+
+Minimum coins
+
+✅ 3. Divide and Conquer
+
+Break problem → solve smaller parts → combine.
+
+Often used with recursion.
+
+Examples:
+
+Merge sort
+
+Quick sort
+
+Binary search
+
+✅ 4. Dynamic Programming (DP)
+
+Break problem into overlapping subproblems.
+
+Store previous results to avoid recomputation.
+
+Examples:
+
+Fibonacci
+
+Knapsack
+
+Longest common subsequence
+
+✅ 5. Backtracking
+
+Try a solution → if it fails, backtrack.
+
+Used where exploring all possibilities is required.
+
+Examples:
+
+N-Queens
+
+Sudoku solver
+
+Subset generation
+
+✅ 6. Recursion
+
+Function calls itself to simplify complex problems.
+
+Used heavily with tree/graph problems.
+
+Examples:
+
+Tree traversal
+
+Factorial
+
+DFS in graphs
+
+✅ 7. Two Pointers
+
+Use two pointers to traverse data efficiently.
+
+Helpful for sorted arrays, strings.
+
+Examples:
+
+Pair sum in sorted array
+
+Remove duplicates from array
+
+Sliding window technique
+
+✅ 8. Sliding Window Technique
+
+Maintain a window to track substring/subarray properties.
+
+Examples:
+
+Longest substring without repeating characters
+
+Max sum of subarray of size k
+
+✅ 9. Hashing / Hash Maps
+
+Store and lookup data quickly.
+
+Often used to reduce time from O(n²) → O(n).
+
+Examples:
+
+Frequency counting
+
+Detect cycles
+
+Two-sum problem
+

@@ -1,0 +1,944 @@
+Aws glue :
+AWS Glue is a serverless data integration service that simplifies Extract, Transform, and Load (ETL) pipelines.
+Component of Glue:
+Data Catalog: A centralized, persistent metadata repository that stores table definitions, schemas, and connection information.
+Crawlers: Automatically scan data sources to infer schemas and populate the Catalog.
+ETL jobs: AWS Glue can automatically generate PySpark scripts for these jobs, which run on a serverless Apache Spark environment.
+
+ 
+Scenario based question 
+
+
+Incremental Data Processing
+You have a daily ETL job that processes 50GB of new data arriving in S3. How do you ensure the job only processes new files without re-scanning the entire bucket? 
+
+Use Job Bookmarks. This feature allows AWS Glue to track the state of processed data by maintaining a state in the AWS Glue Data Catalog. 
+You can also use S3 Partitions (e.g., /year=2024/month=05/day=13/) and pushdown predicates to filter data at the source level, which prevents Spark from loading unnecessary files into memory. 
+ 
+Handling Data Skew & Performance
+Scenario: Your Glue job is running extremely slow or failing with Out-Of-Memory (OOM) errors even though you've increased worker nodes. What do you investigate?
+ 
+This often indicates Data Skew, where one partition is much larger than others, causing a single worker to do all the work.
+
+Solution: 
+Use Salting to redistribute data more evenly.
+Optimization: Check if you are using DynamicFrames versus DataFrames. While DynamicFrames handle semi-structured data well, standard DataFrames are often better for complex Spark-level optimizations.
+Scaling: Ensure Autoscaling is enabled so Glue can dynamically add or remove workers based on the actual workload.
+
+Schema Evolution:
+Scenario: A source database table has a new column added. How does AWS Glue handle this in the downstream Data Lake?
+ 
+You should use AWS Glue Crawlers with a specific configuration for schema changes.
+Configuration: Set the crawler to "Update the table definition in the Data Catalog" when a change is detected.
+Validation: Use the AWS Glue Schema Registry to enforce or allow specific evolution rules (backward, forward, or full compatibility) to prevent breaking downstream queries in Amazon Athena
+ 
+Choosing the Right Tool:
+Scenario: You have a transformation involving heavy joins across multiple massive datasets that takes over 24 hours in Glue. Is Glue still the right choice?
+ 
+Amazon EMR is excellent for serverless very complex, long-running Spark jobs with massive shuffles might be more cost-effective and performant then aws glue
+ Use Glue for general ingestion and preparation, but consider moving heavy, multi-hour "big data" processing to dedicated EMR clusters where you have more granular control over Spark configurations 
+ 
+Managing Sensitive Data
+Scenario: Your source data contains PII (Personally Identifiable Information). How do you handle this within the Glue ETL pipeline?
+ 
+Use the Sensitive Data Detection transform in AWS Glue. This allows you to automatically identify PII data like credit card numbers or SSNs. You can then choose to redact, mask, or encrypt these fields before they reach the target S3 bucket.
+ 
+Scenario:  Your Glue Job fails with an OutOfMemory (OOM) error. How do you fix it? 
+Identify Root Cause: Check CloudWatch metrics to see if the OOM is occurring on the driver node or the worker nodes
+Driver OOM Fix: Avoid calling .collect() or .toPandas() which pulls distributed cluster data into a single node memory space.
+Worker OOM Fix: Resolve data skew issues by salting join keys. Alternatively, scale up worker types from G.1X to G.2X for higher memory-per-core ratios
+Reduce Partition Size: Adjust Spark max partition sizes to prevent loading single, massive chunks into memory. 
+
+Scenario: How do you handle millions of small files in S3 causing slow Glue processing? 
+Grouping Feature: Enable the groupFiles option within the S3 data source configuration ('groupFiles': 'inPartition').
+Compaction Pipeline: Build a staging script that reads small objects and writes them back out as consolidated larger objects (~128MB to 512MB).
+Athena/Iceberg: Implement modern storage frameworks like Apache Iceberg that handle metadata indexing independently of file counts.
+ 
+
+Scenario: Your daily batch job processes 500 GB of JSON logs using an AWS Glue ETL job but takes too long to complete and frequently fails with Out-Of-Memory (OOM) errors.
+Scale Up: Switch from standard Glue workers to G.1X or G.2X workers which provide more memory per Data Processing Unit (DPU).
+Convert Format: Convert the source JSON data into an optimized, compressed columnar format like Parquet or ORC before processing.
+Optimize Shuffling: Use Glue bookmarks to process only incremental data and enable dynamic frame partitioning to avoid large shuffle operations.
+Use Spark UI: Enable the Spark UI on your Glue job to identify exactly which stage is causing the memory bottleneck. 
+ 
+
+
+
+Theory based question
+ 
+What is a DynamicFrame and how does it differ from a Spark DataFrame? 
+A DynamicFrame is a data structure in AWS Glue used for ETL processing. 
+It is similar to a DataFrame in Apache Spark, but it is designed to handle semi-structured and inconsistent data more easily. 
+Dynamic Schema: It computes schemas on-the-fly during execution 
+Nested Data Handling: It native-handles complex, nested, or irregular JSON payloads without requiring flattened schemas. 
+Error Records: Malformed rows are isolated into separate error tracks rather than crashing the pipeline execution. 
+
+Why DynamicFrame is Needed ?
+Due to below issue dynamicframe introduced:
+Some records may have missing columns
+Same column may have different data types
+New columns may appear unexpectedly
+Need manually invention for above problem but Solution is dynamicframe
+Inferring schema automatically
+Managing inconsistent records
+Providing ETL-specific transformations
+ Feature
+DynamicFrame
+DataFrame
+Schema
+Flexible
+Fixed
+Handles messy data
+Yes
+Limited
+AWS Glue support
+Native
+Not native
+Performance
+Slightly slower
+Faster
+Spark SQL support
+Limited
+Full
+Best for
+ETL pipelines
+Transformations/analytics
+
+ 
+ Explain the difference between a Glue Crawler and a Glue Job.?
+Glue Crawler: 
+Reads storage (e.g., S3),
+ deduces data formats, 
+extracts schema metadata, and 
+updates the Data Catalog. 
+It produces metadata, not processed files.   
+Glue Job: 
+Executes the transformation business logic via Spark or Python scripts.
+ It reads physical datasets, 
+applies transforms, and 
+outputs processed files to a destination 
+
+ How do you optimize AWS Glue ETL job performance? 
+File Optimization: Output into columnar formats like Apache Parquet.
+Pushdown Predicates: Filter data directly at the S3 storage level before loading it into memory.
+Partition Pruning: Organise S3 keys logically (e.g., year=2026/month=05/) to restrict scan scopes.
+Shuffle Minimisation: Avoid wide transformations (like .groupBy() or .join()) which trigger costly network data transfers.
+Worker Selection: Match jobs to appropriate worker classes (G.1X, G.2X) instead of scaling raw DPUs blindly. 
+
+ How do you handle schema evolution in AWS Glue?
+Crawler Configurations: Set crawlers to update existing table schemas, add new columns, or create new table versions.
+Glue Schema Registry: Centrally manage schemas using validation modes like Backward, Forward, or Full compatibility.
+DynamicFrame Evolution: Leverage functions like .resolveChoice() or .mergeSchemas() within PySpark code to resolve conflicting data types smoothly.
+
+What is a Job Bookmark and how does it work?
+A Job Bookmark maintains state information across scheduled ETL runs to avoid processing duplicate data 
+Mechanism: Tracks input source metadata such as S3 object modification times or block positions.
+Outcome: Ensures that only new data or altered objects are ingested during incremental loads. 
+
+ When should you choose AWS Glue over Amazon EMR? 
+Choose AWS Glue when you want a serverless ETL service with minimal infrastructure management.
+Choose Amazon EMR when you need full control over big data frameworks and cluster-level customization. 
+
+Feature
+AWS Glue
+Amazon EMR
+Main Purpose
+ETL/Data Integration
+Large-scale Big Data Processing
+Infrastructure
+Serverless
+Cluster-based
+Cluster Management
+No
+Yes (unless EMR Serverless)
+Best For
+Simple-medium ETL pipelines
+Heavy Spark/Hadoop workloads
+Flexibility
+Limited
+Very High
+Spark Control
+Less customization
+Full Spark tuning
+Startup Time
+Quick
+Cluster provisioning required
+Cost Model
+Pay per job/DPU
+Pay for cluster/resources
+Ease of Use
+Easier
+More complex
+Scaling
+Automatic
+Configurable
+Streaming Support
+Limited
+Strong
+ML/Advanced Analytics
+Basic
+Excellent
+Typical Users
+Data analysts/ETL engineers
+Data engineers/big data teams
+
+ 
+Choose AWS Glue when you need a serverless ETL solution with minimal infrastructure management and quick development. It is best for scheduled ETL jobs, moderate-scale transformations, and tight integration with AWS analytics services like Athena and Redshift.
+Choose Amazon EMR when you need large-scale distributed processing, advanced Spark tuning, streaming, machine learning workloads, or support for multiple big data frameworks like Hadoop, Hive, and Spark.
+
+Feature
+Glue
+EMR
+Type
+Serverless ETL
+Managed Cluster
+Infrastructure Management
+AWS handles
+User manages partially
+Setup Time
+Fast
+More setup
+Customization
+Limited
+High
+Spark Tuning
+Limited
+Full control
+Best For
+ETL/Data Integration
+Large-scale complex processing
+Cost Model
+Pay per use (DPU)
+Cluster-based
+Streaming Support
+Limited
+Strong
+
+
+ Explain the types of triggers in AWS Glue.
+Schedule-based Triggers: Start jobs at predefined times using a cron-like syntax.
+Event-based Triggers: Activate jobs in response to specific events, such as the completion of another job.
+On-demand Triggers: Allow users to manually start jobs whenever needed.
+
+ How does AWS Glue integrate with other AWS services?
+Amazon S3: Serves as both a data source and target for ETL jobs.
+AWS Lambda: Can trigger ETL jobs in response to specific events.
+Amazon Redshift: Executes transformation jobs and outputs results directly into Redshift.
+Amazon Athena: Leverages the Data Catalog as a schema repository for querying data.
+Amazon RDS and Amazon DynamoDB: Act as sources or targets for ETL jobs.
+
+ What are the main use cases for AWS Glue?
+Data Preparation for Analytics: Transform and load raw data into data lakes, data warehouses, or analytical tools like Amazon Redshift.
+Data Integration: Combine data from multiple sources for applications or machine learning models.
+ETL Automation: Automate data pipelines with minimal manual intervention using triggers and crawlers.
+Schema Management: Manage and evolve schemas across data silos.
+Data Cataloging: Centralize metadata for easy data discovery and governance.
+
+ What is AWS Glue Studio, and how is it different from standard AWS Glue?
+AWS Glue Studio is a graphical interface for creating, managing, and running ETL workflows. 
+It provides a no-code or low-code approach, allowing users to design workflows visually, unlike the standard AWS Glue interface, which primarily relies on writing scripts.
+
+ How does AWS Glue ensure security?
+Encryption: Encrypt data at rest in Amazon S3 and in transit using SSL/TLS.
+IAM Roles: Use AWS Identity and Access Management (IAM) to define permissions for accessing data sources, targets, and Glue resources. 
+
+ How does AWS Glue handle error handling and monitoring?
+AWS CloudWatch: Logs job execution details, errors, and performance metrics.
+Error Logging: Logs errors in a specific location on Amazon S3.
+Retry Mechanisms: Automatically retries failed tasks based on configurations.
+Job Metrics Dashboard: Displays real-time and historical metrics for monitoring jobs.
+Notifications: Use Amazon Simple Notification Service (SNS) to send alerts when jobs fail or succeed.
+
+ How do you debug AWS Glue ETL Jobs?
+AWS CloudWatch Logs: Check logs for errors and performance metrics.
+Development Endpoints: Test and debug scripts interactively.
+Error Outputs: Review error files stored in Amazon S3.
+Script Validation: Use the Glue console to validate scripts before execution.
+
+  ResolveChoice in AWS Glue:
+ResolveChoice is a transformation used in AWS Glue DynamicFrames to handle datatype ambiguity or schema conflicts.
+Why ResolveChoice Is Needed
+amount
+100
+200
+abc
+300
+
+Glue may infer the column as- choice type( “amount can be int OR string”)
+ResolveChoice helps fix this issue.
+ 
+Cast-Convert column into a specific datatype.
+dyf = dyf.resolveChoice(specs=[('amount','cast:int')])
+Project- Select only one datatype.
+('amount','project:int')
+Make_cols- Creates separate columns for each datatype.
+amount_int
+amount_string
+
+What is DPU In aws ?
+DPU stands for Data Processing Unit in AWS Glue.
+It is the unit of compute power allocated to a Glue job.
+WS Glue DPUs are the compute resources used to execute Glue jobs. 
+They provide CPU and memory for Spark processing. 
+More DPUs improve parallelism and performance, 
+but proper Spark optimization is also important to control cost and efficiency. 
+
+ 
+  
+ 
+ 
+ 
+ 
+
+
+ 
+
+AWS Lambda :
+AWS Lambda is a serverless computing service that automatically manages infrastructure, allowing you to run code in response to triggers like HTTP requests, database updates, or file uploads. You simply upload your code, and AWS Lambda executes it when an event occurs, scaling resources as needed without manual provisioning. 
+
+Scenario based question :
+
+Scenario: A Lambda function triggers on an S3 file upload but crashes due to an out-of-memory error on a 10 GB file. How do you resolve it?
+Do Not Load Entirely: Modify the function code to stop reading the file into memory all at once (avoid commands like .read() in Python).
+Stream in Chunks: Implement S3 Select to query and retrieve only necessary rows, or use standard Python generators with the boto3 SDK to stream the payload line-by-line or block-by-block.
+Scale Up the Compute: Swap the engine tool entirely by initiating an AWS Glue job via the Lambda trigger if heavy memory transformation is required
+ 
+
+Theroy based question : 
+Which programming languages are supported by AWS Lambda?
+AWS Lambda supports several mainstream programming languages, including Python, Java, Node.js, C#, Ruby, Go, and PowerShell. 
+You can also use custom runtimes if your preferred language isn’t natively supported 
+ 
+Can you explain what automated deployment means in the context of AWS Lambda?
+Automated deployment refers to the process of pushing code updates and configurations to Lambda functions without manual intervention. 
+This approach minimizes human error, accelerates release cycles, and ensures consistent environments using tools like AWS CodePipeline, AWS CodeDeploy, or third-party CI/CD tools.
+ 
+What is auto-scaling in AWS Lambda, and how does it benefit applications?
+Auto-scaling in AWS Lambda means that the service automatically adjusts the number of function instances in response to incoming requests. 
+It can handle thousands of concurrent executions without user intervention.  
+ 
+What storage options are available for use with AWS Lambda functions?
+AWS Lambda primarily uses /tmp storage for temporary files (up to 512 MB). For persistent or large-scale storage, Lambda integrates with services like: Amazon S3 for object storage
+ 
+What is the execution timeout limit for AWS Lambda ?
+ the maximum execution timeout for a Lambda function is 15 minutes (900 seconds).  
+
+what is the limitations of Lambda?
+Execution Time Limit
+Memory and CPU Limitations
+Cold Start Problem
+Stateless Nature
+Package Size Limitation
+Limited Temporary Storage
+Not Ideal for Distributed Processing
+
+Good for Lambda
+File trigger from S3
+Small transformations
+Notifications
+Metadata validation
+API backend
+ 
+Not Good for Lambda
+TB-scale ETL
+Spark jobs
+Long-running aggregations
+Heavy joins
+
+Why is AWS Lambda considered a time-saving solution for developers?
+Lambda streamlines deployment and scaling, eliminating the need to manage servers. 
+Additionally, it stores code efficiently, can interact directly with databases, and supports rapid testing. 
+These factors reduce operational overhead and development time, allowing developers to focus on building features rather than managing infrastructure. 
+ 
+What are the components of AWS Lambda?
+AWS lambda has three major components such as:
+
+Function/Code: This is the actual code that is used to perform the live task
+Runtime/configuration: It mentions how your function can be executed.
+Event source (optional): The event serves as the trigger for the function and can be activated by various AWS services or a third-party service. 
+
+ 
+How do you handle dependencies in AWS Lambda?
+Direct inclusion: For interpreted languages, we can put dependency files along with our function code in the .zip deployment package.
+Lambda layers: For compiled languages or larger dependencies, we can use Lambda layers to separately package and share common dependencies across functions.
+Container images: We can also package dependencies in container images along with the Lambda function code and a custom runtime
+
+What is a lambda layer and how do you create it?
+They allow you to manage and share common code, libraries, or dependencies across multiple functions, keeping your deployment package clean. 
+
+Layers usually contain library dependencies, a custom runtime, or configuration files.
+
+Creating a lambda layer:
+Package your layer content. This means creating a .zip file archive that contains the dependencies you want to use in your functions.
+Create the layer in Lambda.
+Add the layer to your functions.
+
+
+There are multiple reasons why we might consider using layers:
+
+To reduce the size of our deployment packages
+To separate core function logic from dependencies.
+To share dependencies across multiple functions.
+
+
+What is a cold start in Lambda? How can you minimize it in Lambda?
+A cold start is the delay when Lambda initializes a new execution environment after being idle.
+ 
+ Solution for cold start:
+Enable provisioned concurrency: By keeping a pool of initialized environments ready
+Optimize package size: Reducing the size of our function package by removing unnecessary dependencies
+Language choice: Opting for languages like Go or Rust, known for faster startup times
+Execution context reuse: Keeping our Lambda function code separate from the initial setup logic
+
+How do you use Lambda in a data engineering pipeline?
+Lambda is primarily used for event-driven automation.
+ Common use cases include:
+Triggers: Automatically starting an ETL job when a file lands in Amazon S3.
+Lightweight ETL: Running small-scale data validation, enrichment, or formatting.
+Orchestration: Coordinating services via AWS Step Functions.
+Data Validation: Validates incoming payloads and filters out corrupt schemas before loading into a data lake
+
+Is Lambda stateless or stateful?
+It is stateless. 
+Each invocation is independent; 
+if you need to maintain state, you must store it in an external database like Amazon DynamoDB or Amazon RDS  
+ 
+What are the hard limits of AWS Lambda and how to bypass it?
+Timeout: Maximum execution time is 15 minutes.
+Bypass: Split massive datasets into smaller chunks, or offload heavy processing to AWS Glue or AWS Batch.
+Memory: Max allocation is 10 GB.
+Bypass: Mount an Amazon EFS network file system directly to the function for unlimited temporary cache.
+Payload Size: 6 MB for synchronous calls; 256 KB for asynchronous.
+Deployment Package: 50 MB zipped, 250 MB unzipped. 
+Bypass: Utilize Lambda Layers for heavy libraries (like Pandas or NumPy), or package functions into container images up to 10 GB.
+ 
+How do you process a 100 GB file if Lambda has memory limits?
+You should stream the file or process it in chunks using Python generators (yield) rather than loading the entire file into memory. 
+Alternatively, use AWS Glue or Amazon EMR for heavy lifting.  
+ 
+ How does Lambda handle scaling?
+It scales horizontally(increase no of machine) by creating new instances of your function to handle concurrent requests.
+ 
+How do you handle retries and failures?
+Lambda processes events in either synchronous or asynchronous modes. 
+In synchronous execution, failures return errors to the invoking service. 
+In asynchronous mode, Lambda retries the event automatically up to two additional times(three attempts total).
+Failed events can be sent to a Dead Letter Queue (DLQ) using Amazon SQS or Amazon SNS for later debugging.
+ 
+What is an IAM Execution Role in aws lambda ?
+It is the set of permissions granted to the Lambda function to access other AWS services (like S3 or CloudWatch) following the Principle of Least Privilege.
+ 
+Explain the difference between Synchronous and Asynchronous invocations in Lambda?
+Synchronous Invocation: The client service (e.g., Amazon API Gateway) calls the function and waits for a response. Errors must be caught immediately.
+
+Asynchronous Invocation: The client service (e.g., Amazon S3 event) triggers Lambda and receives an immediate 202 success code. Lambda queues the event and automatically handles up to 2 built-in retries if it fails.
+ 
+How do you secure data access permissions inside an AWS Lambda function?
+IAM Execution Role: Every function must be bound to a unique, dedicated IAM role enforcing the Principle of Least Privilege.
+Secrets Management: Fetch secure database passwords directly from AWS Secrets Manager at runtime rather than storing plain text environment variables.
+No Access Keys: Never store static programmatic keys in code.
+ 
+How do you handle errors and avoid data loss when Lambda consumes messages from an Amazon SQS queue?
+Visibility Timeout: Set the SQS queue visibility timeout to at least 6 times the Lambda function timeout to avoid another worker picking up an unfinished message
+Dead Letter Queues (DLQ): Configure an SQS DLQ or use Lambda Destinations on failure. This moves corrupt or un-parsable data records to a side queue for manual debugging after a preset number of retries.
+Batch Item Failures: Return a specific payload (batchItemFailures) back to SQS, ensuring only the exact failed message stays in the queue while successful messages are cleanly deleted
+
+
+
+ Aws s3:
+ AWS S3 (Simple Storage Service) is an object storage service used to store and retrieve files/data from the cloud. 
+ It can store:
+files
+images
+videos
+backups
+logs
+Parquet/CSV data
+data lake files
+
+Common Use:
+Data Lake Storage
+Raw Data
+Processed Data
+Curated Data
+
+ETL Pipelines:
+Pickup as source 
+Target 
+
+Backup & Archival
+Store:
+database backups
+logs
+historical data
+
+Static Website Hosting:
+Can host:
+HTML
+CSS
+JS
+
+Big Data Analytics:
+Works with:
+Glue
+EMR
+Athena
+Redshift
+ 
+Advantages of s3:
+Highly Scalable - Can store virtually unlimited data.
+Durable & Reliable
+Cost Effective
+AWS Integration with many services 
+Serverless
+Supports Multiple File Formats
+ 
+Disadvantages of s3:
+Not Suitable for Transactional Workloads
+Not ideal for:
+row-level updates
+frequent modifications
+
+Latency Higher Than Local Storage
+database/storage systems may perform better.
+ 
+Small File Problem
+Too many small files:
+increase Spark processing overhead
+reduce performance 
+ 
+Access Management Can Become Complex:
+Need proper:
+IAM policies
+Bucket permissions
+
+What is S3 Lifecycle policy?
+In Data Engineering projects, S3 Lifecycle Policies are mainly used to optimize storage cost by transitioning old datasets to cheaper storage classes and deleting obsolete data automatically.
+File archive based on usage and timeline:-
+Step 
+Typical Timeline
+Storage Class Transition
+New Data
+Day 0
+S3 Standard (High performance, higher cost)
+Infrequent
+Day 30+
+S3 Standard-IA (Lower cost for less frequent access)
+Archival
+Day 90+
+S3 Glacier Archive storage (Archive storage)
+Deep Archive
+Day 180+
+S3 Glacier Deep Archive (Lowest cost, long-term)
+Cleanup
+Day 365+
+Expiration (Permanent deletion)
+
+
+
+
+How would you ensure the data deletion protection?
+Enable Versioning - Keeps multiple versions of the same object
+Enable MFA Delete - Requires Multi-Factor Authentication before deletion
+Use Bucket Policies and IAM Restrictions 
+Cross-Region Replication - Replicate data to another bucket/region.
+ 
+
+
+ 
+ 
+ Aws step function:
+AWS Step Functions is a serverless workflow orchestration service used to coordinate multiple AWS services into a sequence of steps.
+Instead of manually triggering each service,Step Functions controls the entire flow.
+
+You define workflow steps using:
+states
+transitions
+conditions
+retries
+parallel execution 
+ 
+Common Use Cases:
+ETL Orchestration
+ensuring that the tasks of Extracting, Transforming, and Loading data run in the 
+correct sequence, 
+respect upstream dependencies, and 
+handle errors or 
+retries without manual intervention.
+
+Sequential Workflow Execution:
+Each step depends on previous step.
+ 
+Error Handling & Retry Logic 
+If Glue job fails:
+Retry automatically
+Send alert
+Trigger fallback flow
+
+Parallel Processing 
+Run multiple Glue jobs simultaneously
+All can execute in parallel.
+
+ Core Components
+State Machine - Main workflow definition.
+steps
+conditions
+retries
+branching
+States types:
+Task
+Choice
+Parallel
+Wait
+Pass
+Fail
+Succeed
+ 
+Example :
+Start
+  ↓
+Validate File
+  ↓
+Choice State
+ ├── Valid → Process Data
+ └── Invalid → Send Alert
+ 
+Advantages of aws step function:
+Serverless - No server management.
+
+Visual Workflow- Very easy to understand pipelines visually.
+Easier monitoring and debugging compared to cron-based orchestration.
+
+Built-in Retry Handling:
+You can configure:
+retries
+timeout
+backoff strategy
+Without writing custom code.
+ 
+AWS Service Integration:
+Direct integration with:
+Lambda
+Glue
+ECS elastic container service
+EMR elastic map reduce
+SNS simple notification service
+SQS simple queue service
+DynamoDB
+
+Parallel Execution:
+Improves performance for independent tasks.
+ 
+Monitoring:
+Integrated with:
+Amazon Web Services CloudWatch
+execution history
+step-level logs 
+
+ Disadvantage of aws steps function:
+Complex Workflows Become Hard to Manage
+ Debugging Large Nested Flows Can Be Difficult
+
+Limited Compared to Full Orchestrators like airflow
+
+AWS Vendor Lock-in
+Not ideal for multi-cloud environments. Nol;y suitable for aws ecosystem 
+ 
+Cost Can Increase:
+Pricing based on:
+state transitions
+executions
+High-frequency pipelines may become expensive.
+ 
+Aws step function vs airflow :
+
+Feature
+Step Functions
+Airflow
+Type
+Serverless
+Workflow platform
+Infrastructure
+Managed by AWS
+Needs setup
+Best For
+AWS-native workflows
+Complex DAGs
+Monitoring
+Simple visual UI
+Advanced
+Scalability
+Automatic
+Depends on infra
+Vendor Lock-in
+High
+Low
+Scheduling
+Basic
+Advanced
+
+ 
+ 
+When would you choose Step Functions over Airflow?
+I would use Step Functions for AWS-native serverless orchestration where services like Lambda, Glue, and S3 are tightly integrated. It simplifies retry handling, monitoring, and scaling without infrastructure management.
+ 
+
+
+
+Difference between Step Functions and Lambda?
+Lambda
+Step Functions
+Task Type: Executes code
+Task Type: Orchestrates workflow
+Task Scope: Single task
+Task Scope: Multiple coordinated tasks
+State Management: Stateless execution
+State Management: Stateful workflow
+
+ 
+ 
+   
+Amazon CloudWatch:
+AWS CloudWatch is a monitoring and observability service used to monitor:
+AWS resources
+applications
+logs
+metrics
+events
+
+It helps detect:
+failures
+high CPU usage
+memory issues
+failed ETL jobs
+application downtime 
+
+Suppose you have: Lambda functions, Glue jobs, EC2 servers, Step Functions
+CloudWatch helps you:
+monitor them
+collect logs
+create alerts
+automate actions 
+
+Common Use Cases
+Monitoring Glue Jobs
+job failures
+execution time
+logs
+errors
+If Glue job fails, CloudWatch sends alert through SNS/email.
+ 
+Monitoring Lambda Functions
+Tracks:
+invocation count
+execution time
+Errors
+
+ETL Pipeline Monitoring:
+CloudWatch monitors entire pipeline.
+
+Log Collection - Applications send logs to CloudWatch Logs.
+Example logs:
+Spark job errors
+API failures
+Lambda exceptions
+Alerting System:
+Create alarms for:
+CPU > 80%
+Glue failure
+Lambda timeout
+Disk full
+ 
+CloudWatch can trigger:
+SNS
+Lambda
+Auto Scaling
+
+Advantages of aws cloudwatch:
+Centralized Monitoring
+Monitor multiple AWS services from one place.
+ 
+ Real-Time Alerts
+Detect failures quickly.
+
+ Serverless & Managed
+No infrastructure management.
+
+  Deep AWS Integration
+Can integrated with various aws service
+
+ Log Retention & Search
+Useful for debugging production issues.
+
+ Disadvantages of aws cloudwatch
+Cost Can Increase
+Large log storage and high metrics volume can become expensive
+  
+ AWS-Centric
+Useful inside aws ecosystem
+ Searching Large Logs Can Be Slower
+
+Limited Advanced Analytics 
+  
+ 
+Amazon EMR: 
+AWS EMR (Elastic MapReduce) is a managed big data processing service used to run distributed frameworks like:
+Apache Spark
+Hadoop
+Hive
+HBase
+Flink
+Presto   
+ 
+It is mainly used for:
+large-scale data processing
+big data analytics
+ETL pipelines 
+ 
+
+ Suppose you have:
+TBs or PBs of data
+very heavy Spark jobs
+custom cluster requirements
+Instead of managing Hadoop/Spark clusters manually,
+AWS EMR creates and manages the cluster for you.
+
+Common Use Cases:
+Large-Scale Spark Processing
+Example:
+processing billions of records
+large joins
+complex aggregations
+ 
+ETL Pipelines:
+Run PySpark ETL jobs on huge datasets.
+ 
+Data Lake Processing:
+Machine Learning Workloads
+Streaming Data Processing
+ 
+Why Companies Use EMR Instead of Glue Sometimes?
+Use EMR when:
+workload is very large
+long-running clusters required
+custom Spark configurations needed
+advanced tuning required
+streaming jobs required
+custom libraries/dependencies needed 
+ 
+Advantages of aws EMR:
+Highly Scalable - Can process huge datasets efficiently.
+
+Supports Multiple Big Data Frameworks:
+Spark
+Hadoop
+Hive
+HBase
+Presto
+Flink
+
+ Better Control Over Spark Cluster
+You can tune:
+executors
+memory
+cores
+partitions
+Spark configs 
+ 
+Good for Long-Running Workloads
+ 
+Strong Integration with other AWS services
+ 
+disadvantages of aws EMR:
+Infrastructure Management Required
+Compared to Glue, Need more operational work. 
+ 
+More Complex Than Glue:
+ 
+Startup Time:
+Cluster creation may take several minutes.
+ 
+Can Become Expensive:
+If clusters are left running unnecessarily.
+ 
+Requires Monitoring & Maintenance
+Need to monitor:
+node failures
+cluster health
+Scaling
+  
+ 
+ Amazon Redshift :
+AWS Redshift is a fully managed cloud data warehouse service used for:
+arge-scale analytics
+business intelligence (BI)
+reporting
+OLAP workloads
+ 
+Transactional databases like:
+MySQL
+PostgreSQL
+are mainly for:
+inserts
+updates
+Transactions
+But for analytics on billions of rows, they become slow. 
+Redshift is specially designed for:analytics, reporting, dashboards 
+ 
+Why Redshift Is Fast?
+Columnar Storage
+Redshift stores columns separately.
+Benefits:
+reads only required columns
+faster analytics
+better compression
+ 
+MPP (Massively Parallel Processing)
+Data distributed across multiple nodes.
+Query executes in parallel.
+ 
+data compression
+
+distributed architecture
+ 
+Advantages of redshift:
+very Fast for Analytics
+Columnar Storage
+Scalable - Can handle TBs to PBs of data.
+AWS Integration with multiple services
+Supports Standard SQL
+compression Reduces Storage Cost
+ 
+Disadvantages of  redshift:
+Not Ideal for OLTP
+Expensive for Small Teams - Cluster cost can be high.
+Concurrency Limitations - Very high concurrent workloads may impact performance.
+Maintenance Needed 
+
+Why use Redshift instead of MySQL?
+Redshift is optimized for analytical workloads on huge datasets using columnar storage and distributed processing,
+ whereas MySQL is optimized for transactional operations.
+ 
+
+
+
+  
+  
+ 
+  
+ 
+  
+
+
+ 
+ 
+ 
+ 
+ 
+  
+ AWS related questions: 
+
+
+ 
+  
+ 

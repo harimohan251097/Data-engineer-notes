@@ -1,0 +1,212 @@
+ 1. Explain Your Project (MOST IMPORTANT)
+Answer:
+I worked on a sports nutrition brand project where I built an end-to-end ETL pipeline using PySpark and AWS services.
+Data was ingested from multiple sources like sales, inventory, and customer datasets and stored in Amazon S3 as raw data.
+For processing, I used AWS Glue with PySpark to clean and transform the data—handling null values, removing duplicates, standardizing formats, and applying joins and aggregations.
+I also used AWS Lambda for event-driven validation when new data arrived in S3.
+Finally, I generated analytics-ready datasets for reporting and optimized the pipeline using partitioning, broadcast joins, and proper file sizing.
+I was also responsible for monitoring and resolving data quality issues to ensure reliable data delivery.
+
+⚙️ 2. How Did You Handle Data Ingestion?
+Answer:
+Data ingestion was done into S3 in raw format without transformation to maintain traceability.
+I used structured folder hierarchy like /sales/, /customers/, etc.
+Files were ingested in append mode to preserve historical data.
+To ensure reliability, I designed ingestion to be idempotent by later deduplicating records in the transformation layer.
+
+🧹 3. What Transformations Did You Apply?
+Answer:
+In the transformation layer, I applied:
+Deduplication using business keys like customer_id
+Null handling using fillna and dropna where required
+Data type casting for consistency
+Standardization like trimming spaces and converting text to lowercase
+Joins between sales, customer, and product datasets
+Aggregations like total revenue calculation
+These steps ensured clean and analytics-ready data.
+
+🔗 4. How Did You Optimize Joins?
+Answer:
+I optimized joins using broadcast joins when one of the tables was small, such as product data.
+ This avoided shuffle and improved performance significantly.
+ For large joins, I ensured proper partitioning to reduce data skew and shuffle overhead.
+
+⚡ 5. What Performance Optimizations Did You Do?
+Answer:
+I improved performance in multiple ways:
+Used partitioning on frequently queried columns like city
+Applied repartition before writing to avoid too many small files
+Used broadcast join for small tables
+Cached intermediate DataFrames when reused
+These optimizations reduced execution time and improved query performance.
+
+🧠 6. What Data Quality Issues Did You Face?
+Answer:
+I handled multiple data quality issues such as:
+Null values in critical columns like customer_id
+Duplicate records due to repeated ingestion
+Inconsistent values like "Delhi", "delhi", " DELHI "
+Incorrect data types (string instead of numeric)
+I resolved these using validation checks, standardization logic, and transformation rules.
+ Overall, I resolved more than 10 such issues to ensure reliable data.
+
+🔄 7. How Did You Use AWS Lambda?
+Answer:
+I used AWS Lambda for event-driven validation.
+ Whenever a new file was uploaded to S3, Lambda was triggered automatically.
+ It performed basic validation checks like file size, schema presence, and data availability before triggering downstream processing.
+This ensured only valid data entered the pipeline.
+
+☁️ 8. Why Did You Use AWS Glue?
+Answer:
+I used AWS Glue because it provides serverless Spark execution, integrates well with S3, and reduces infrastructure management overhead.
+ It also supports PySpark, which made it easier to build scalable ETL jobs.
+
+📊 9. How Did You Handle Pipeline Failures?
+Answer:
+For failures, I followed a structured approach:
+Checked logs in Glue and Spark
+Validated intermediate data in S3
+Re-ran jobs from failure point
+Used idempotent transformations(operations in computing and data engineering that produce the same output regardless of how many times they are executed) to avoid duplication
+This ensured reliable recovery without data corruption.
+
+🔁 10. How Did You Handle Incremental Data?
+Answer:
+Instead of processing full data daily, I filtered data based on date or new file arrival.
+ This reduced processing time and improved efficiency.
+ Deduplication logic ensured no duplicate records were introduced.
+
+📂 11. How Did You Solve Small File Problem?
+Answer:
+Initially, many small files were generated in S3, which slowed down processing.
+ I resolved this by using repartition before writing, which reduced file count and improved performance.
+
+🧨 12. Scenario: Pipeline Is Slow
+Answer:
+I would:
+Check for shuffle-heavy operations
+Analyze join strategy
+Look for data skew
+Optimize partitioning
+Use Spark UI for debugging
+
+🧨 13. Scenario: Duplicate Data Daily
+Answer:
+I would implement deduplication using unique keys like sale_id and timestamp.
+ Additionally, I would validate upstream ingestion to prevent duplicate entries.
+
+🧠 14. Why Not Use Data Warehouse Instead of S3?
+Answer:
+S3 provides a scalable and cost-effective data lake solution.
+ It allows storing raw and processed data, whereas a data warehouse is mainly for structured analytics.
+ Our use case required flexibility and large-scale storage, so S3 was preferred.
+
+🎯 15. Strong Closing Answer (If Asked “What Was Your Contribution?”)
+Answer:
+I was responsible for building and optimizing ETL pipelines, implementing data transformations, improving performance using Spark optimizations, and resolving data quality issues to ensure reliable analytics data delivery.
+
+
+
+
+
+
+
+
+
+
+
+
+Your client stores data in a database—how do you get that data into S3 and in what format?”
+
+✅ Strong Answer (Use This in Interview)
+In our project, the source data was stored in relational databases. To ingest that data into Amazon S3, we used batch extraction approaches.
+ We typically used either JDBC-based extraction through Spark/Glue jobs or AWS-native services like AWS Glue to pull data from the source database.
+ The extracted data was then written into S3 in raw format, usually as CSV for initial ingestion, maintaining a structured folder hierarchy like /sales/, /customers/, etc.
+ In some cases, for better performance and compression, we also used columnar formats like Parquet in downstream layers.
+
+🧠 If They Ask “HOW EXACTLY?” (Deeper Answer)
+You can expand:
+We connected to the database using JDBC in a PySpark/Glue job, provided connection details like URL, username, password, and table name.
+ The data was read into a Spark DataFrame and then written to S3 using .write.csv() in append mode to maintain historical data.
+Example:
+df = spark.read.format("jdbc") \
+   .option("url", "jdbc:mysql://host:port/db") \
+   .option("dbtable", "sales") \
+   .option("user", "username") \
+   .option("password", "password") \
+   .load()
+
+df.write.mode("append").csv("s3://retail-data-lake/bronze/sales/")
+
+⚡ Alternative (More Advanced Answer)
+If you want to sound stronger:
+For large-scale or continuous ingestion, we can also use AWS services like:
+AWS Database Migration Service for CDC (change data capture)
+Scheduled Glue jobs for batch ingestion
+👉 This helps in handling incremental data instead of full load.
+
+📦 Format Explanation (Important Part)
+Why CSV in Bronze?
+We used CSV in the Bronze layer because it preserves raw data and is easy to debug.
+
+Why Parquet Later?
+In Silver and Gold layers, we converted data to Parquet because it is columnar, compressed, and improves query performance.
+
+🧨 Follow-up Questions They May Ask
+Q: Why not store directly in Parquet?
+Answer:
+We keep Bronze raw for traceability and debugging. Transformation happens in later layers.
+
+Q: How do you handle large tables?
+Answer:
+Use partitioned reads via JDBC (split by column like id) to parallelize extraction.
+
+Q: What if DB is huge (1TB+)?
+Answer:
+Use incremental load (based on timestamp) or CDC via AWS Database Migration Service
+
+🎯 Perfect Short Answer (30 sec version)
+We extract data from source databases using JDBC through Glue or PySpark jobs and load it into Amazon S3 in CSV format for the Bronze layer. For downstream processing, we convert it into Parquet format to improve performance and reduce storage cost.
+
+
+
+1.how to load module in lambda
+AWS Lambda Layers (Recommended)
+AWS Lambda Layers allow you to upload your modules separately from your main function code. This keeps your core code clean and editable directly in the AWS console browser. 
+AWS Lambda searches a specific folder path in the layer for dependencies. You must use this exact folder structure when zipping your file: 
+For Python: python/lib/python3.x/site-packages/ (or simply a folder named python/ containing your libraries)
+Step-by-Step for Python:
+On your local computer, create a folder named python.
+Install the library directly into that folder: pip install pandas -t ./python
+Compress the folder into a .zip file (e.g., pandas_layer.zip).
+Go to the AWS Lambda Console \Click Layers \ Click Create Layer.
+Upload your zip file, choose your runtime version (e.g., Python 3.12), and click Create.
+Go to your Lambda Function \ scroll to the bottom to the Layers section \ click Add a layer \select your Custom Layer. 
+Now, you can simply write import pandas as pd at the top of your function script.
+
+
+ you are fetching data from client db using jdbc in glue job is client data is structured data, if its already structured why you are not directly analyzing it ?
+
+Although the source database contained structured data, we still moved it into S3 and processed it through ETL pipelines because the source system was optimized for transactional workloads, not analytics.
+Running heavy analytical queries directly on the client database could impact application performance.
+So, we extracted the data into a separate analytics platform where we could clean, transform, aggregate, and optimize it for reporting and large-scale processing using Spark.
+ 
+ 
+ 
+ 
+ 
+  
+ 
+ 
+  
+ 
+ 
+ 
+ 
+ 
+  
+
+
+
+
